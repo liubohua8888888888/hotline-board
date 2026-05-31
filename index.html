@@ -335,26 +335,13 @@
 <!-- ===== Cloud Sync Modal ===== -->
 <div class="modal-overlay" id="cloudModal">
   <div class="modal">
-    <h2>☁️ 云端同步设置</h2>
-    <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px;">配置后，数据将自动同步到云端，所有同事共享同一份数据。</p>
+    <h2>☁️ GitHub 云同步设置</h2>
+    <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px;">配置后，数据将自动同步到 GitHub 仓库，所有同事共享同一份数据。</p>
 
     <div class="form-group">
-      <label>JSONBin API密钥</label>
-      <input type="password" id="cloudApiKey" placeholder="从 jsonbin.io 获取的 API Key（选填）">
-      <div class="hint">到 <a href="https://jsonbin.io" target="_blank" rel="noopener">jsonbin.io</a> 注册免费账号即可获取</div>
-    </div>
-    <div class="form-group">
-      <label>JSONBin ID（已有Bin的ID）</label>
-      <input type="text" id="cloudBinId" placeholder="留空则自动创建新Bin">
-      <div class="hint">第一次配置时留空，系统会自动创建</div>
-    </div>
-
-    <div style="background:var(--gray-50);border-radius:8px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.6;">
-      <strong>📖 注册步骤：</strong><br>
-      ① 打开 <a href="https://jsonbin.io" target="_blank" rel="noopener">jsonbin.io</a>，点 "Sign Up" 注册<br>
-      ② 登录后进入 <strong>API Keys</strong> 页面，点 "Create API Key"<br>
-      ③ 复制密钥粘贴到上方 "API密钥" 框<br>
-      ④ 点击下方「测试连接」→ 点击「保存」
+      <label>GitHub Token</label>
+      <input type="password" id="cloudApiKey" placeholder="输入 GitHub Personal Access Token">
+      <div class="hint">用之前创建的那个 ghp_ 开头的 Token 就行</div>
     </div>
 
     <div class="error-msg" id="cloudError"></div>
@@ -514,7 +501,12 @@ function checkAdminSession() { return sessionStorage.getItem(ADMIN_SESSION_KEY) 
 function setAdminSession() { sessionStorage.setItem(ADMIN_SESSION_KEY, '1'); }
 function clearAdminSession() { sessionStorage.removeItem(ADMIN_SESSION_KEY); }
 
-// ===== Cloud Sync =====
+// ===== GitHub Sync =====
+const GH_OWNER = 'liubohua8888888888';
+const GH_REPO = 'hotline-board';
+const GH_BRANCH = 'main';
+const GH_DATA_FILE = 'data.json';
+
 function loadCloudConfig() {
   const stored = localStorage.getItem(CLOUD_CONFIG_KEY);
   if (stored) {
@@ -529,7 +521,7 @@ function saveCloudConfigToLocal() {
 
 function updateSyncStatus() {
   const el = document.getElementById('syncStatus');
-  if (cloudConfig && cloudConfig.apiKey) {
+  if (cloudConfig && cloudConfig.token) {
     el.className = 'sync-status online';
     el.textContent = '☁️ 已同步';
   } else {
@@ -538,59 +530,69 @@ function updateSyncStatus() {
   }
 }
 
-async function syncToCloud() {
-  if (!cloudConfig || !cloudConfig.apiKey) return;
-  const headers = {
-    'Content-Type': 'application/json',
-    'X-Master-Key': cloudConfig.apiKey,
-  };
-
-  // If no bin ID yet, create one
-  if (!cloudConfig.binId) {
-    try {
-      const resp = await fetch('https://api.jsonbin.io/v3/b', {
-        method: 'POST',
-        headers: { ...headers, 'X-Bin-Name': '热线看板' },
-        body: JSON.stringify(links),
-      });
-      if (!resp.ok) throw new Error('创建Bin失败');
+async function getGitHubFileSHA(token) {
+  try {
+    const resp = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_FILE}`, {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
+    });
+    if (resp.ok) {
       const data = await resp.json();
-      cloudConfig.binId = data.metadata.id;
-      saveCloudConfigToLocal();
-      showToast('☁️ 云端首次同步成功！', 'success');
-    } catch(e) {
-      showToast('❌ 云端同步失败：' + e.message, 'error');
-      return;
+      return data.sha;
     }
-  } else {
-    // Update existing bin
-    try {
-      const resp = await fetch(`https://api.jsonbin.io/v3/b/${cloudConfig.binId}`, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(links),
-      });
-      if (!resp.ok) throw new Error('同步失败');
-    } catch(e) {
-      showToast('❌ 云端同步失败：' + e.message, 'error');
-      return;
-    }
+    return null; // File doesn't exist yet
+  } catch(e) {
+    return null;
+  }
+}
+
+async function syncToCloud() {
+  if (!cloudConfig || !cloudConfig.token) return;
+  const token = cloudConfig.token;
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(links, null, 2))));
+  const sha = await getGitHubFileSHA(token);
+
+  const body = {
+    message: '更新热线看板数据',
+    content: content,
+    branch: GH_BRANCH,
+  };
+  if (sha) body.sha = sha;
+
+  try {
+    const resp = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_FILE}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) throw new Error('同步失败');
+    showToast('☁️ 数据已同步到 GitHub', 'success');
+  } catch(e) {
+    showToast('❌ 同步失败：' + e.message, 'error');
   }
 }
 
 async function loadFromCloud() {
-  if (!cloudConfig || !cloudConfig.apiKey || !cloudConfig.binId) return false;
+  if (!cloudConfig || !cloudConfig.token) return false;
+  const token = cloudConfig.token;
   try {
-    const resp = await fetch(`https://api.jsonbin.io/v3/b/${cloudConfig.binId}/latest`, {
-      headers: { 'X-Master-Key': cloudConfig.apiKey },
+    const sha = await getGitHubFileSHA(token);
+    if (!sha) { showToast('ℹ️ 云端暂无数据', 'info'); return false; }
+    const resp = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_FILE}`, {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
     });
     if (!resp.ok) throw new Error('加载失败');
     const data = await resp.json();
-    if (data.record && Array.isArray(data.record)) {
-      links = data.record;
+    const decoded = decodeURIComponent(escape(atob(data.content)));
+    const remoteLinks = JSON.parse(decoded);
+    if (Array.isArray(remoteLinks)) {
+      links = remoteLinks;
       saveData();
       renderLinks();
-      showToast('☁️ 已从云端加载数据', 'success');
+      showToast('☁️ 已从 GitHub 加载数据', 'success');
       return true;
     }
   } catch(e) {
@@ -600,43 +602,29 @@ async function loadFromCloud() {
 }
 
 async function testCloudConnection() {
-  const apiKey = document.getElementById('cloudApiKey').value.trim();
-  const binId = document.getElementById('cloudBinId').value.trim();
+  const token = document.getElementById('cloudApiKey').value.trim();
   const errorEl = document.getElementById('cloudError');
   const successEl = document.getElementById('cloudSuccess');
   errorEl.style.display = 'none';
   successEl.style.display = 'none';
 
-  if (!apiKey) {
-    errorEl.textContent = '请先输入 API 密钥';
+  if (!token) {
+    errorEl.textContent = '请输入 GitHub Token';
     errorEl.style.display = 'block';
     return;
   }
 
   try {
-    if (binId) {
-      const resp = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-        headers: { 'X-Master-Key': apiKey },
-      });
-      if (resp.ok) {
-        successEl.textContent = '✅ 连接成功！云端数据可正常读取';
-        successEl.style.display = 'block';
-      } else {
-        errorEl.textContent = '❌ 连接失败，请检查 API 密钥和 Bin ID';
-        errorEl.style.display = 'block';
-      }
+    const resp = await fetch('https://api.github.com/user', {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
+    });
+    if (resp.ok) {
+      const user = await resp.json();
+      successEl.textContent = `✅ 连接成功！GitHub 用户：${user.login}，可以保存配置了`;
+      successEl.style.display = 'block';
     } else {
-      // Just test the API key by trying to list bins
-      const resp = await fetch('https://api.jsonbin.io/v3/b', {
-        headers: { 'X-Master-Key': apiKey },
-      });
-      if (resp.ok) {
-        successEl.textContent = '✅ API 密钥有效！可以点击保存来自动创建数据存储';
-        successEl.style.display = 'block';
-      } else {
-        errorEl.textContent = '❌ API 密钥无效，请重新获取';
-        errorEl.style.display = 'block';
-      }
+      errorEl.textContent = '❌ Token 无效，请检查';
+      errorEl.style.display = 'block';
     }
   } catch(e) {
     errorEl.textContent = '❌ 网络错误：' + e.message;
@@ -647,16 +635,23 @@ async function testCloudConnection() {
 // ===== Init =====
 function init() {
   loadCloudConfig();
-  loadData();
-  updateSyncStatus();
-  document.getElementById('headerDate').textContent = getTodayStr();
-  if (checkAdminSession()) {
-    adminMode = true;
-    document.getElementById('adminBar').style.display = 'block';
-    document.getElementById('adminToggleBtn').textContent = '🔓 退出管理';
-  }
-  renderLinks();
-  setupLightbox();
+  // Try to load from GitHub first, fallback to local
+  (async () => {
+    if (cloudConfig && cloudConfig.token) {
+      await loadFromCloud();
+    } else {
+      loadData();
+    }
+    updateSyncStatus();
+    document.getElementById('headerDate').textContent = getTodayStr();
+    if (checkAdminSession()) {
+      adminMode = true;
+      document.getElementById('adminBar').style.display = 'block';
+      document.getElementById('adminToggleBtn').textContent = '🔓 退出管理';
+    }
+    renderLinks();
+    setupLightbox();
+  })();
 }
 
 function loadData() {
@@ -730,13 +725,12 @@ function closeCloudModal() { document.getElementById('cloudModal').classList.rem
 
 function saveCloudConfig() {
   const apiKey = document.getElementById('cloudApiKey').value.trim();
-  const binId = document.getElementById('cloudBinId').value.trim();
   if (!apiKey) {
-    document.getElementById('cloudError').textContent = '请输入 API 密钥';
+    document.getElementById('cloudError').textContent = '请输入 GitHub Token';
     document.getElementById('cloudError').style.display = 'block';
     return;
   }
-  cloudConfig = { apiKey, binId };
+  cloudConfig = { token: apiKey, binId: '' };
   saveCloudConfigToLocal();
   updateSyncStatus();
   closeCloudModal();
