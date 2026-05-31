@@ -576,20 +576,25 @@ async function syncToCloud() {
 }
 
 async function loadFromCloud() {
-  // Read from GitHub API (public file, no token needed)
+  // Load data.json from the same GitHub Pages site - no CORS, no token, fast!
   try {
-    const resp = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_FILE}`, {
-      headers: { 'Accept': 'application/vnd.github.v3+json' },
-      cache: 'no-cache',
-    });
-    if (!resp.ok) {
-      if (resp.status === 404) return false;
-      throw new Error('加载失败');
+    // Try multiple URLs for reliability
+    const urls = [
+      `./${GH_DATA_FILE}`,                          // Same directory (GitHub Pages)
+      `/hotline-board/${GH_DATA_FILE}`,              // Root-relative
+      `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_DATA_FILE}`, // Raw fallback
+    ];
+    let remoteLinks = null;
+    for (const url of urls) {
+      try {
+        const resp = await fetch(url, { cache: 'no-cache' });
+        if (resp.ok) {
+          remoteLinks = await resp.json();
+          break;
+        }
+      } catch(e) { continue; }
     }
-    const data = await resp.json();
-    const decoded = decodeURIComponent(escape(atob(data.content)));
-    const remoteLinks = JSON.parse(decoded);
-    if (Array.isArray(remoteLinks)) {
+    if (remoteLinks && Array.isArray(remoteLinks)) {
       links = remoteLinks;
       saveData();
       renderLinks();
