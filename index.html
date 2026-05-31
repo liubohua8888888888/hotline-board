@@ -576,27 +576,28 @@ async function syncToCloud() {
 }
 
 async function loadFromCloud() {
-  if (!cloudConfig || !cloudConfig.token) return false;
-  const token = cloudConfig.token;
+  // Read from public GitHub raw URL - no token needed
   try {
-    const sha = await getGitHubFileSHA(token);
-    if (!sha) { showToast('ℹ️ 云端暂无数据', 'info'); return false; }
-    const resp = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_FILE}`, {
-      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
+    const resp = await fetch(`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_DATA_FILE}`, {
+      cache: 'no-cache',
     });
-    if (!resp.ok) throw new Error('加载失败');
-    const data = await resp.json();
-    const decoded = decodeURIComponent(escape(atob(data.content)));
-    const remoteLinks = JSON.parse(decoded);
+    if (!resp.ok) {
+      if (resp.status === 404) {
+        // data.json doesn't exist yet, that's fine
+        return false;
+      }
+      throw new Error('加载失败');
+    }
+    const remoteLinks = await resp.json();
     if (Array.isArray(remoteLinks)) {
       links = remoteLinks;
       saveData();
       renderLinks();
-      showToast('☁️ 已从 GitHub 加载数据', 'success');
       return true;
     }
   } catch(e) {
-    showToast('❌ 从云端加载失败：' + e.message, 'error');
+    // Silent fail - will fall back to local data
+    console.log('从 GitHub 加载数据失败（首次使用或网络问题）');
   }
   return false;
 }
@@ -635,11 +636,10 @@ async function testCloudConnection() {
 // ===== Init =====
 function init() {
   loadCloudConfig();
-  // Try to load from GitHub first, fallback to local
+  // Always load from GitHub (public URL, no token needed), fallback to local
   (async () => {
-    if (cloudConfig && cloudConfig.token) {
-      await loadFromCloud();
-    } else {
+    const loaded = await loadFromCloud();
+    if (!loaded) {
       loadData();
     }
     updateSyncStatus();
