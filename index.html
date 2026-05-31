@@ -576,19 +576,19 @@ async function syncToCloud() {
 }
 
 async function loadFromCloud() {
-  // Read from public GitHub raw URL - no token needed
+  // Read from GitHub API (public file, no token needed)
   try {
-    const resp = await fetch(`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_DATA_FILE}`, {
+    const resp = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_FILE}`, {
+      headers: { 'Accept': 'application/vnd.github.v3+json' },
       cache: 'no-cache',
     });
     if (!resp.ok) {
-      if (resp.status === 404) {
-        // data.json doesn't exist yet, that's fine
-        return false;
-      }
+      if (resp.status === 404) return false;
       throw new Error('加载失败');
     }
-    const remoteLinks = await resp.json();
+    const data = await resp.json();
+    const decoded = decodeURIComponent(escape(atob(data.content)));
+    const remoteLinks = JSON.parse(decoded);
     if (Array.isArray(remoteLinks)) {
       links = remoteLinks;
       saveData();
@@ -596,8 +596,7 @@ async function loadFromCloud() {
       return true;
     }
   } catch(e) {
-    // Silent fail - will fall back to local data
-    console.log('从 GitHub 加载数据失败（首次使用或网络问题）');
+    console.log('从云端加载数据失败，使用本地数据');
   }
   return false;
 }
