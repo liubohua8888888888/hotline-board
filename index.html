@@ -328,9 +328,99 @@
 </header>
 
 <!-- ===== Announcement Bar (top banner) ===== -->
-<div class="announcement-bar" id="announcementBar" onclick="openAnnouncementPopup()">
+<div class="announcement-bar" id="announcementBar" onclick="openAnnouncementPopup(0)" style="display:none;">
   <span id="announcementBarText"></span>
   <button class="close-bar" onclick="event.stopPropagation(); dismissAnnouncementBar()">✕</button>
+</div>
+
+<!-- ===== Announcement Popup (for viewing) ===== -->
+<div class="announcement-popup" id="announcementPopup">
+  <div class="popup-card">
+    <button class="popup-close" onclick="closeAnnouncementPopup()">✕</button>
+    <div class="popup-icon" id="popupIcon">📢</div>
+    <h2 id="popupTitle">公告</h2>
+    <div class="popup-time" id="popupTime"></div>
+    <div class="popup-content" id="popupContent"></div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="popup-btn" id="popupPrevBtn" onclick="prevAnnouncement()" style="flex:0 0 auto;width:auto;padding:10px 16px;background:var(--gray-200);color:var(--gray-700);">← 上一条</button>
+      <button class="popup-btn" id="popupNextBtn" onclick="nextAnnouncement()" style="flex:0 0 auto;width:auto;padding:10px 16px;background:var(--gray-200);color:var(--gray-700);">下一条 →</button>
+      <button class="popup-btn" id="popupCloseBtn" onclick="closeAnnouncementPopup()" style="flex:1;">我知道了</button>
+    </div>
+    <div style="text-align:center;font-size:12px;color:var(--gray-400);margin-top:8px;">
+      <span id="popupCounter"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Announcement Manager Modal (admin) ===== -->
+<div class="modal-overlay" id="announcementSettingsModal">
+  <div class="modal" style="max-width: 640px;">
+    <h2>📢 公告管理</h2>
+    <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;">可创建多条公告，支持设置显示频次和定时提醒。</p>
+
+    <!-- Add/Edit form -->
+    <div style="background:var(--gray-50);border-radius:8px;padding:16px;margin-bottom:16px;">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;" id="announceFormTitle">➕ 新增公告</h3>
+      <input type="hidden" id="editAnnounceIndex" value="-1">
+      <div class="form-row">
+        <div class="form-group">
+          <label>图标</label>
+          <select id="announceIcon">
+            <option value="📢">📢 公告</option>
+            <option value="🎉">🎉 庆祝</option>
+            <option value="⚠️">⚠️ 重要</option>
+            <option value="🚨">🚨 紧急</option>
+            <option value="📌">📌 通知</option>
+            <option value="💡">💡 提示</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>标题 *</label>
+          <input type="text" id="announceTitle" placeholder="公告标题">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>内容 *</label>
+        <textarea id="announceContent" rows="3" placeholder="输入公告内容..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>显示频次</label>
+          <select id="announceFrequency">
+            <option value="always">每次都显示</option>
+            <option value="hourly">每小时提醒</option>
+            <option value="daily">每天一次</option>
+            <option value="weekly">每周一次</option>
+            <option value="once">只显示一次</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>过期日期</label>
+          <input type="date" id="announceExpire">
+        </div>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="announceEnabled" style="width:auto;" checked>
+        <label for="announceEnabled" style="margin:0;">启用此公告</label>
+      </div>
+      <div class="error-msg" id="announceFormError"></div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="cancelEditAnnounce()" id="cancelEditBtn" style="display:none;">取消编辑</button>
+        <button class="btn btn-success btn-sm" onclick="addOrUpdateAnnounce()">✅ 保存此公告</button>
+      </div>
+    </div>
+
+    <!-- Announcement list -->
+    <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">公告列表 <span id="announceCount" style="font-weight:400;color:var(--gray-400);font-size:12px;"></span></h3>
+    <div id="announceListContainer" style="max-height:300px;overflow-y:auto;">
+      <div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px;">暂无公告，请在上方添加</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-sm" onclick="clearAllAnnouncements()">清除全部</button>
+      <button class="btn btn-ghost" onclick="closeAnnouncementSettings()">关闭</button>
+    </div>
+  </div>
 </div>
 
 <!-- ===== Announcement Popup ===== -->
@@ -616,7 +706,6 @@ const STORAGE_KEY = 'loomy_biz_links_v2';
 const PWD_KEY = 'loomy_admin_pwd';
 const ADMIN_SESSION_KEY = 'loomy_admin_session';
 const CLOUD_CONFIG_KEY = 'loomy_cloud_config';
-const ANNOUNCE_CONFIG_KEY = 'loomy_announce_config';
 const DEFAULT_PWD = 'admin123';
 
 let links = [];
@@ -782,77 +871,125 @@ async function testCloudConnection() {
   }
 }
 
-// ===== Announcement System =====
-function getAnnounceConfig() {
-  const stored = localStorage.getItem(ANNOUNCE_CONFIG_KEY);
+// ===== Announcement System (multi-announcement + hourly) =====
+const ANNOUNCEMENTS_KEY = 'loomy_announcements';
+
+function getAnnouncements() {
+  const stored = localStorage.getItem(ANNOUNCEMENTS_KEY);
   if (stored) {
     try { return JSON.parse(stored); } catch(e) {}
   }
-  return null;
+  return [];
 }
 
-function saveAnnounceConfig(config) {
-  localStorage.setItem(ANNOUNCE_CONFIG_KEY, JSON.stringify(config));
+function saveAnnouncements(list) {
+  localStorage.setItem(ANNOUNCEMENTS_KEY, JSON.stringify(list));
+  updateSyncStatus();
 }
 
-function shouldShowAnnouncement(config) {
-  if (!config || !config.enabled) return false;
-  // Check expiry
-  if (config.expire) {
-    const today = new Date().toISOString().split('T')[0];
-    if (today > config.expire) return false;
-  }
-  // Check frequency
-  const lastShown = localStorage.getItem('loomy_announce_last_shown');
-  const freq = config.frequency || 'always';
+let currentPopupIndex = 0;
+
+function getActiveAnnouncements() {
+  const all = getAnnouncements();
+  const today = new Date().toISOString().split('T')[0];
+  return all.filter(a => {
+    if (!a.enabled) return false;
+    if (a.expire && today > a.expire) return false;
+    return true;
+  });
+}
+
+function shouldShowPopup(announce) {
+  if (!announce || !announce.enabled) return false;
+  const key = `loomy_announce_shown_${announce.id || announce.title}`;
+  const lastShown = localStorage.getItem(key);
+  const freq = announce.frequency || 'always';
   if (freq === 'once' && lastShown) return false;
+  if (freq === 'hourly') {
+    const lastHour = lastShown ? lastShown.split(':')[0] + ':00' : '';
+    const nowHour = new Date().toISOString().split('T')[1].split(':')[0] + ':00';
+    if (lastShown && lastHour === nowHour) {
+      // Check if it's been at least 1 hour
+      const diff = (new Date() - new Date(lastShown)) / (1000 * 60);
+      if (diff < 60) return false;
+    }
+  }
   if (freq === 'daily') {
     const today = new Date().toISOString().split('T')[0];
-    if (lastShown === today) return false;
+    if (lastShown && lastShown.startsWith(today)) return false;
   }
   if (freq === 'weekly') {
     if (lastShown) {
-      const last = new Date(lastShown);
-      const now = new Date();
-      const diffDays = Math.floor((now - last) / (1000 * 60 * 60 * 24));
-      if (diffDays < 7) return false;
+      const diff = (new Date() - new Date(lastShown)) / (1000 * 60 * 60 * 24);
+      if (diff < 7) return false;
     }
   }
   return true;
 }
 
-function showAnnouncement() {
-  const config = getAnnounceConfig();
-  if (!config) return;
-  // Show bar
-  if (config.showBar !== false && config.barText) {
-    const bar = document.getElementById('announcementBar');
-    document.getElementById('announcementBarText').textContent = config.barText;
+function showAnnouncements() {
+  const active = getActiveAnnouncements();
+  if (active.length === 0) return;
+
+  // Show bar with count
+  const bar = document.getElementById('announcementBar');
+  const barText = document.getElementById('announcementBarText');
+  if (active.length === 1) {
+    barText.textContent = `📢 ${active[0].title || '新公告'} - 点击查看`;
+    bar.style.display = 'block';
+  } else {
+    barText.textContent = `📢 ${active.length} 条新公告待查看 - 点击查看`;
     bar.style.display = 'block';
   }
-  // Show popup
-  if (shouldShowAnnouncement(config)) {
-    document.getElementById('popupTitle').textContent = config.title || '公告';
-    document.getElementById('popupContent').textContent = config.content || '';
-    document.getElementById('popupTime').textContent = config.date || '';
-    // Update icon
-    const iconEl = document.querySelector('.announcement-popup .popup-icon');
-    if (iconEl && config.icon) iconEl.textContent = config.icon;
+
+  // Auto-show popups that haven't been shown yet
+  const toShow = active.filter(a => shouldShowPopup(a));
+  if (toShow.length > 0) {
+    // Find first that should show
+    const firstIdx = active.findIndex(a => a.id === toShow[0].id);
+    currentPopupIndex = firstIdx >= 0 ? firstIdx : 0;
+    renderPopupContent(active[currentPopupIndex]);
     document.getElementById('announcementPopup').classList.add('show');
-    // Record last shown
-    localStorage.setItem('loomy_announce_last_shown', new Date().toISOString().split('T')[0]);
+    // Record shown
+    const recordKey = `loomy_announce_shown_${active[currentPopupIndex].id || active[currentPopupIndex].title}`;
+    localStorage.setItem(recordKey, new Date().toISOString());
   }
 }
 
-function openAnnouncementPopup() {
-  const config = getAnnounceConfig();
-  if (!config) return;
-  document.getElementById('popupTitle').textContent = config.title || '公告';
-  document.getElementById('popupContent').textContent = config.content || '';
-  document.getElementById('popupTime').textContent = config.date || '';
-  const iconEl = document.querySelector('.announcement-popup .popup-icon');
-  if (iconEl && config.icon) iconEl.textContent = config.icon;
+function renderPopupContent(item) {
+  if (!item) return;
+  const active = getActiveAnnouncements();
+  document.getElementById('popupIcon').textContent = item.icon || '📢';
+  document.getElementById('popupTitle').textContent = item.title || '公告';
+  document.getElementById('popupContent').textContent = item.content || '';
+  document.getElementById('popupTime').textContent = item.date || '';
+  document.getElementById('popupCounter').textContent = `第 ${currentPopupIndex + 1} / ${active.length} 条`;
+  document.getElementById('popupPrevBtn').style.display = currentPopupIndex > 0 ? '' : 'none';
+  document.getElementById('popupNextBtn').style.display = currentPopupIndex < active.length - 1 ? '' : 'none';
+}
+
+function openAnnouncementPopup(index) {
+  const active = getActiveAnnouncements();
+  if (active.length === 0) return;
+  currentPopupIndex = index !== undefined ? index : 0;
+  renderPopupContent(active[currentPopupIndex]);
   document.getElementById('announcementPopup').classList.add('show');
+}
+
+function prevAnnouncement() {
+  const active = getActiveAnnouncements();
+  if (currentPopupIndex > 0) {
+    currentPopupIndex--;
+    renderPopupContent(active[currentPopupIndex]);
+  }
+}
+
+function nextAnnouncement() {
+  const active = getActiveAnnouncements();
+  if (currentPopupIndex < active.length - 1) {
+    currentPopupIndex++;
+    renderPopupContent(active[currentPopupIndex]);
+  }
 }
 
 function closeAnnouncementPopup() {
@@ -863,17 +1000,14 @@ function dismissAnnouncementBar() {
   document.getElementById('announcementBar').style.display = 'none';
 }
 
+// ===== Admin: Announcement Manager =====
 function openAnnouncementSettings() {
-  const config = getAnnounceConfig() || {};
-  document.getElementById('announceEnabled').checked = config.enabled || false;
-  document.getElementById('announceIcon').value = config.icon || '📢';
-  document.getElementById('announceTitle').value = config.title || '';
-  document.getElementById('announceContent').value = config.content || '';
-  document.getElementById('announceFrequency').value = config.frequency || 'always';
-  document.getElementById('announceExpire').value = config.expire || '';
-  document.getElementById('announceShowBar').checked = config.showBar !== false;
-  document.getElementById('announceBarText').value = config.barText || '📢 点击查看公告详情 →';
-  document.getElementById('announceError').style.display = 'none';
+  document.getElementById('announceFormTitle').textContent = '➕ 新增公告';
+  document.getElementById('editAnnounceIndex').value = '-1';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  document.getElementById('announceFormError').style.display = 'none';
+  clearAnnounceForm();
+  renderAnnounceList();
   document.getElementById('announcementSettingsModal').classList.add('show');
 }
 
@@ -881,37 +1015,126 @@ function closeAnnouncementSettings() {
   document.getElementById('announcementSettingsModal').classList.remove('show');
 }
 
-function saveAnnouncement() {
-  const config = {
-    enabled: document.getElementById('announceEnabled').checked,
-    icon: document.getElementById('announceIcon').value,
-    title: document.getElementById('announceTitle').value.trim(),
-    content: document.getElementById('announceContent').value.trim(),
-    frequency: document.getElementById('announceFrequency').value,
-    expire: document.getElementById('announceExpire').value,
-    showBar: document.getElementById('announceShowBar').checked,
-    barText: document.getElementById('announceBarText').value.trim(),
-    date: new Date().toISOString().split('T')[0],
-  };
-  if (config.enabled && !config.title && !config.content) {
-    document.getElementById('announceError').textContent = '请填写公告标题或内容';
-    document.getElementById('announceError').style.display = 'block';
-    return;
-  }
-  saveAnnounceConfig(config);
-  closeAnnouncementSettings();
-  showToast('📢 公告已保存', 'success');
-  showAnnouncement();
+function clearAnnounceForm() {
+  document.getElementById('announceIcon').value = '📢';
+  document.getElementById('announceTitle').value = '';
+  document.getElementById('announceContent').value = '';
+  document.getElementById('announceFrequency').value = 'always';
+  document.getElementById('announceExpire').value = '';
+  document.getElementById('announceEnabled').checked = true;
 }
 
-function clearAnnouncement() {
-  if (!confirm('确定要清除公告吗？')) return;
-  localStorage.removeItem(ANNOUNCE_CONFIG_KEY);
-  localStorage.removeItem('loomy_announce_last_shown');
+function cancelEditAnnounce() {
+  document.getElementById('announceFormTitle').textContent = '➕ 新增公告';
+  document.getElementById('editAnnounceIndex').value = '-1';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  clearAnnounceForm();
+}
+
+function addOrUpdateAnnounce() {
+  const title = document.getElementById('announceTitle').value.trim();
+  const content = document.getElementById('announceContent').value.trim();
+  if (!title || !content) {
+    document.getElementById('announceFormError').textContent = '请填写公告标题和内容';
+    document.getElementById('announceFormError').style.display = 'block';
+    return;
+  }
+  document.getElementById('announceFormError').style.display = 'none';
+
+  const editIdx = parseInt(document.getElementById('editAnnounceIndex').value);
+  const list = getAnnouncements();
+
+  const item = {
+    id: Date.now() + Math.random(),
+    icon: document.getElementById('announceIcon').value,
+    title: title,
+    content: content,
+    frequency: document.getElementById('announceFrequency').value,
+    expire: document.getElementById('announceExpire').value,
+    enabled: document.getElementById('announceEnabled').checked,
+    date: new Date().toISOString().split('T')[0],
+  };
+
+  if (editIdx >= 0 && editIdx < list.length) {
+    item.id = list[editIdx].id;
+    list[editIdx] = item;
+    showToast('✅ 公告已更新', 'success');
+  } else {
+    list.push(item);
+    showToast('✅ 公告已添加', 'success');
+  }
+
+  saveAnnouncements(list);
+  renderAnnounceList();
+  clearAnnounceForm();
+  document.getElementById('announceFormTitle').textContent = '➕ 新增公告';
+  document.getElementById('editAnnounceIndex').value = '-1';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+}
+
+function editAnnounce(index) {
+  const list = getAnnouncements();
+  const item = list[index];
+  if (!item) return;
+  document.getElementById('announceFormTitle').textContent = '✏️ 编辑公告';
+  document.getElementById('editAnnounceIndex').value = index;
+  document.getElementById('cancelEditBtn').style.display = '';
+  document.getElementById('announceIcon').value = item.icon || '📢';
+  document.getElementById('announceTitle').value = item.title || '';
+  document.getElementById('announceContent').value = item.content || '';
+  document.getElementById('announceFrequency').value = item.frequency || 'always';
+  document.getElementById('announceExpire').value = item.expire || '';
+  document.getElementById('announceEnabled').checked = item.enabled !== false;
+}
+
+function deleteAnnounce(index) {
+  if (!confirm('确定要删除这条公告吗？')) return;
+  const list = getAnnouncements();
+  list.splice(index, 1);
+  saveAnnouncements(list);
+  renderAnnounceList();
+  showToast('🗑️ 公告已删除', 'info');
+}
+
+function renderAnnounceList() {
+  const list = getAnnouncements();
+  const container = document.getElementById('announceListContainer');
+  document.getElementById('announceCount').textContent = `(${list.length} 条)`;
+
+  if (list.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px;">暂无公告，请在上方添加</div>';
+    return;
+  }
+
+  container.innerHTML = list.map((item, idx) => {
+    const freqLabels = { always:'总是', hourly:'每小时', daily:'每天', weekly:'每周', once:'仅一次' };
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:8px;background:${item.enabled ? '#fff' : 'var(--gray-50)'};">
+        <span style="font-size:20px;">${item.icon || '📢'}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:13px;color:var(--gray-800);">${item.title} ${!item.enabled ? '<span style="color:var(--gray-400);font-weight:400;font-size:11px;">(已禁用)</span>' : ''}</div>
+          <div style="font-size:11px;color:var(--gray-400);">
+            ${freqLabels[item.frequency] || '总是'} ${item.expire ? '· 至 ' + item.expire : ''}
+          </div>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0;">
+          <button class="btn btn-ghost btn-sm" onclick="editAnnounce(${idx})" style="padding:3px 8px;">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteAnnounce(${idx})" style="padding:3px 8px;">🗑️</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function clearAllAnnouncements() {
+  if (!confirm('确定要清除所有公告吗？')) return;
+  localStorage.removeItem(ANNOUNCEMENTS_KEY);
+  // Clear all shown records
+  const keys = Object.keys(localStorage).filter(k => k.startsWith('loomy_announce_shown_'));
+  keys.forEach(k => localStorage.removeItem(k));
+  renderAnnounceList();
   document.getElementById('announcementBar').style.display = 'none';
   closeAnnouncementPopup();
-  closeAnnouncementSettings();
-  showToast('🗑️ 公告已清除', 'info');
+  showToast('🗑️ 所有公告已清除', 'info');
 }
 
 // ===== Init =====
@@ -932,8 +1155,8 @@ function init() {
     }
     renderLinks();
     setupLightbox();
-    // Show announcement
-    showAnnouncement();
+    // Show announcements
+    showAnnouncements();
   })();
 }
 
