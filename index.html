@@ -464,6 +464,7 @@
     <button class="nav-tab" data-view="dept" onclick="switchView('dept')">🏢 按部门</button>
     <button class="nav-tab" data-view="date" onclick="switchView('date')">📅 按日期</button>
     <button class="nav-tab" data-view="all" onclick="switchView('all')">📋 全部卡片</button>
+    <button class="nav-tab" data-view="log" onclick="switchView('log')">📋 更新记录</button>
   </div>
 
   <div class="toolbar">
@@ -706,6 +707,7 @@ const STORAGE_KEY = 'loomy_biz_links_v2';
 const PWD_KEY = 'loomy_admin_pwd';
 const ADMIN_SESSION_KEY = 'loomy_admin_session';
 const CLOUD_CONFIG_KEY = 'loomy_cloud_config';
+const LOGS_KEY = 'loomy_change_logs';
 const DEFAULT_PWD = 'admin123';
 
 let links = [];
@@ -1137,6 +1139,101 @@ function clearAllAnnouncements() {
   showToast('🗑️ 所有公告已清除', 'info');
 }
 
+// ===== Change Log System =====
+function getChangeLogs() {
+  try { return JSON.parse(localStorage.getItem(LOGS_KEY)) || []; } catch(e) { return []; }
+}
+
+function saveChangeLogs(logs) {
+  try { localStorage.setItem(LOGS_KEY, JSON.stringify(logs)); } catch(e) {}
+}
+
+function addChangeLog(action, item) {
+  const logs = getChangeLogs();
+  logs.unshift({
+    id: Date.now() + Math.random(),
+    action: action, // 'add', 'edit', 'delete'
+    title: item.title || '未命名',
+    type: item.type || '其他',
+    department: item.department || '全公司',
+    time: new Date().toISOString(),
+    date: new Date().toISOString().split('T')[0],
+  });
+  // Keep max 500 logs
+  if (logs.length > 500) logs.length = 500;
+  saveChangeLogs(logs);
+}
+
+function renderChangeLogs(logs) {
+  if (!logs || logs.length === 0) {
+    return '<div style="text-align:center;padding:40px 20px;color:var(--gray-400);font-size:14px;">暂无更新记录</div>';
+  }
+  const actionLabels = { add: '➕ 新增', edit: '✏️ 修改', delete: '🗑️ 删除' };
+  const today = new Date().toISOString().split('T')[0];
+  let html = '', currentDate = '';
+
+  logs.forEach(log => {
+    const logDate = log.date || log.time.split('T')[0];
+    const isToday = logDate === today;
+    const displayDate = isToday ? '今日' : logDate;
+    if (logDate !== currentDate) {
+      currentDate = logDate;
+      html += `<div style="font-size:12px;font-weight:600;color:var(--gray-500);margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--gray-100);">${displayDate}</div>`;
+    }
+    html += `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;background:${isToday ? 'var(--primary-light)' : 'transparent'};margin-bottom:2px;">
+        <span style="font-size:13px;white-space:nowrap;">${actionLabels[log.action] || '📋'}</span>
+        <span style="font-size:13px;font-weight:500;color:var(--gray-800);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${log.title}</span>
+        <span style="font-size:11px;padding:1px 6px;border-radius:4px;background:var(--gray-100);color:var(--gray-500);">${log.type}</span>
+        <span style="font-size:11px;color:var(--gray-400);white-space:nowrap;">${log.time.split('T')[1].split(':')[0]}:${log.time.split('T')[1].split(':')[1]}</span>
+      </div>`;
+  });
+  return html;
+}
+
+function showChangeLogView() {
+  const container = document.getElementById('linksContainer');
+  const logs = getChangeLogs();
+  let html = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+      <div class="section-title" style="margin:0;">📋 更新记录 <span class="count">(${logs.length} 条)</span></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="filterChangeLogs('today')" id="filterTodayBtn" style="background:var(--primary);color:#fff;">今日</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterChangeLogs('week')" id="filterWeekBtn">本周</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterChangeLogs('all')" id="filterAllBtn">全部</button>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:8px 16px;" id="changeLogContent">
+      ${renderChangeLogs(logs)}
+    </div>`;
+  container.innerHTML = html;
+  window._changeLogFilter = 'today';
+  filterChangeLogs('today');
+}
+
+function filterChangeLogs(filter) {
+  window._changeLogFilter = filter;
+  const logs = getChangeLogs();
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const weekAgo = new Date(today);
+  weekAgo.setDate(weekAgo.getDate() - 7);
+
+  let filtered = logs;
+  if (filter === 'today') {
+    const todayStr = new Date().toISOString().split('T')[0];
+    filtered = logs.filter(l => (l.date || l.time.split('T')[0]) === todayStr);
+  } else if (filter === 'week') {
+    filtered = logs.filter(l => new Date(l.time) >= weekAgo);
+  }
+
+  document.getElementById('changeLogContent').innerHTML = renderChangeLogs(filtered);
+  ['filterTodayBtn','filterWeekBtn','filterAllBtn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style = id === `filter${filter.charAt(0).toUpperCase()+filter.slice(1)}Btn` ? 'background:var(--primary);color:#fff;' : '';
+  });
+}
+
 // ===== Init =====
 function init() {
   loadCloudConfig();
@@ -1283,7 +1380,11 @@ function switchView(view) {
   currentView = view;
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.querySelector(`.nav-tab[data-view="${view}"]`).classList.add('active');
-  renderLinks();
+  if (view === 'log') {
+    showChangeLogView();
+  } else {
+    renderLinks();
+  }
 }
 
 // ===== Image Handling =====
@@ -1466,10 +1567,12 @@ async function saveLink(e) {
   if (editId) {
     const idx = links.findIndex(l => l.id == editId);
     if (idx !== -1) { links[idx] = { ...links[idx], ...data }; }
+    addChangeLog('edit', data);
     showToast('✅ 链接已更新', 'success');
   } else {
     data.id = Date.now() + Math.random();
     links.unshift(data);
+    addChangeLog('add', data);
     showToast('✅ 链接已添加', 'success');
   }
   saveData();
@@ -1483,9 +1586,11 @@ async function saveLink(e) {
 
 async function deleteLink(id) {
   if (!confirm('确定要删除这个链接吗？')) return;
+  const item = links.find(l => l.id == id);
   links = links.filter(l => l.id != id);
   saveData();
   renderLinks();
+  if (item) addChangeLog('delete', item);
   showToast('🗑️ 链接已删除', 'info');
   // Auto sync to cloud
   if (cloudConfig && cloudConfig.apiKey) {
