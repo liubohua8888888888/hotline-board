@@ -624,8 +624,8 @@
         <input type="text" id="inputTitle" placeholder="输入链接标题" required>
       </div>
       <div class="form-group">
-        <label>链接地址 *</label>
-        <input type="url" id="inputUrl" placeholder="https://..." required>
+        <label>链接地址</label>
+        <input type="url" id="inputUrl" placeholder="https://...（没有链接可不填）">
       </div>
       <div class="form-group">
         <label>简要描述</label>
@@ -1411,7 +1411,7 @@ function buildCard(l) {
     imageHtml = `<div class="card-image-wrap" onclick="openLightbox('${l.image.replace(/'/g, "\\'")}')"><img src="${l.image}" alt="${l.title}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'img-placeholder\\'><span class=\\'icon\\'>🖼️</span>图片加载失败</div>'"></div>`;
   }
   const adminActions = adminMode ? `<div class="admin-actions" style="display:flex;gap:6px;flex-shrink:0;"><button class="btn btn-ghost btn-sm admin-edit" data-id="${l.id}">✏️</button><button class="btn btn-danger btn-sm admin-delete" data-id="${l.id}">🗑️</button></div>` : '';
-  return `<div class="link-card ${todayClass}">${todayBadge}<div class="link-card-header"><span class="type-tag type-${l.type}">${l.type}</span>${adminActions}</div><h3>${l.title}</h3>${l.description ? `<p class="desc">${l.description}</p>` : ''}${imageHtml}<div class="meta"><span class="meta-item"><span class="dept-tag">🏢 ${l.department}</span></span><span class="meta-item">📅 ${l.date}</span></div>${tags ? `<div class="tag-list">${tags}</div>` : ''}<div class="link-card-actions">${isExternal ? `<a href="${linkUrl}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">🔗 打开链接</a>` : `<span style="font-size:12px;color:var(--gray-400);padding:6px 0;">（演示链接）</span>`}<button class="btn btn-ghost btn-sm" onclick="copyLink('${encodeURIComponent(linkUrl)}', '${l.title.replace(/'/g, "\\'")}')">📋 复制</button></div></div>`;
+  return `<div class="link-card ${todayClass}">${todayBadge}<div class="link-card-header"><span class="type-tag type-${l.type}">${l.type}</span>${adminActions}</div><h3>${l.title}</h3>${l.description ? `<p class="desc">${l.description}</p>` : ''}${imageHtml}<div class="meta"><span class="meta-item"><span class="dept-tag">🏢 ${l.department}</span></span><span class="meta-item">📅 ${l.date}</span></div>${tags ? `<div class="tag-list">${tags}</div>` : ''}<div class="link-card-actions">${isExternal ? `<a href="${linkUrl}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">🔗 打开链接</a>` : `<span style="font-size:12px;color:var(--gray-400);padding:6px 0;">📄 纯文本内容</span>`}<button class="btn btn-ghost btn-sm" onclick="copyLink('${encodeURIComponent(linkUrl)}', '${l.title.replace(/'/g, "\\'")}')">📋 复制</button></div></div>`;
 }
 
 // ===== CRUD =====
@@ -1454,7 +1454,7 @@ async function saveLink(e) {
   const editId = document.getElementById('editId').value;
   const data = {
     title: document.getElementById('inputTitle').value.trim(),
-    url: document.getElementById('inputUrl').value.trim(),
+    url: document.getElementById('inputUrl').value.trim() || '#',
     description: document.getElementById('inputDesc').value.trim(),
     type: document.getElementById('inputType').value,
     department: document.getElementById('inputDept').value,
@@ -1496,7 +1496,7 @@ async function deleteLink(id) {
 // ===== Copy =====
 function copyLink(url, title) {
   const decoded = decodeURIComponent(url);
-  if (decoded === '#') { showToast('⚠️ 演示链接，无法复制', 'error'); return; }
+  if (decoded === '#') { showToast('ℹ️ 没有链接可复制', 'info'); return; }
   navigator.clipboard.writeText(decoded).then(() => { showToast(`📋 已复制: ${title}`, 'success'); }).catch(() => { showToast('❌ 复制失败', 'error'); });
 }
 
