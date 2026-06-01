@@ -36,6 +36,67 @@
     color: var(--gray-800);
     min-height: 100vh;
   }
+  /* Announcement Banner */
+  .announcement-bar {
+    display: none;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: #fff;
+    text-align: center;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+  }
+  .announcement-bar:hover { opacity: 0.95; }
+  .announcement-bar .close-bar {
+    position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: #fff; font-size: 18px;
+    cursor: pointer; opacity: 0.7; padding: 4px 8px;
+  }
+  .announcement-bar .close-bar:hover { opacity: 1; }
+  /* Announcement Popup Modal */
+  .announcement-popup {
+    display: none; position: fixed; inset: 0; z-index: 1001;
+    background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+    backdrop-filter: blur(4px); padding: 20px;
+  }
+  .announcement-popup.show { display: flex; }
+  .announcement-popup .popup-card {
+    background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    width: 100%; max-width: 480px; max-height: 80vh; overflow-y: auto;
+    padding: 32px; animation: modalIn 0.3s ease; position: relative;
+  }
+  .announcement-popup .popup-card .popup-close {
+    position: absolute; top: 16px; right: 16px;
+    background: var(--gray-100); border: none; border-radius: 50%;
+    width: 32px; height: 32px; font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--gray-500); transition: var(--transition);
+  }
+  .announcement-popup .popup-card .popup-close:hover { background: var(--gray-200); }
+  .announcement-popup .popup-card .popup-icon {
+    font-size: 40px; text-align: center; margin-bottom: 12px;
+  }
+  .announcement-popup .popup-card h2 {
+    font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 8px;
+    color: var(--gray-800);
+  }
+  .announcement-popup .popup-card .popup-time {
+    text-align: center; font-size: 12px; color: var(--gray-400); margin-bottom: 16px;
+  }
+  .announcement-popup .popup-card .popup-content {
+    font-size: 14px; line-height: 1.8; color: var(--gray-700);
+    white-space: pre-wrap;
+  }
+  .announcement-popup .popup-card .popup-btn {
+    display: block; width: 100%; margin-top: 20px;
+    padding: 10px; border: none; border-radius: 8px;
+    background: var(--primary); color: #fff; font-size: 14px; font-weight: 500;
+    cursor: pointer; font-family: var(--font); transition: var(--transition);
+  }
+  .announcement-popup .popup-card .popup-btn:hover { background: var(--primary-dark); }
   .header {
     background: linear-gradient(135deg, #4f6ef7 0%, #6c5ce7 50%, #a855f7 100%);
     color: #fff; padding: 28px 32px 24px;
@@ -266,6 +327,24 @@
   </div>
 </header>
 
+<!-- ===== Announcement Bar (top banner) ===== -->
+<div class="announcement-bar" id="announcementBar" onclick="openAnnouncementPopup()">
+  <span id="announcementBarText"></span>
+  <button class="close-bar" onclick="event.stopPropagation(); dismissAnnouncementBar()">✕</button>
+</div>
+
+<!-- ===== Announcement Popup ===== -->
+<div class="announcement-popup" id="announcementPopup">
+  <div class="popup-card">
+    <button class="popup-close" onclick="closeAnnouncementPopup()">✕</button>
+    <div class="popup-icon">📢</div>
+    <h2 id="popupTitle">公告</h2>
+    <div class="popup-time" id="popupTime"></div>
+    <div class="popup-content" id="popupContent"></div>
+    <button class="popup-btn" onclick="closeAnnouncementPopup()">我知道了</button>
+  </div>
+</div>
+
 <!-- ===== Stats ===== -->
 <div class="stats-bar">
   <div class="stats-inner">
@@ -282,6 +361,7 @@
     <div style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:var(--radius); padding:14px 18px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;">
       <span style="font-size:14px; font-weight:500; color:var(--primary-dark);">🔧 管理链接 <span class="admin-badge">已认证</span></span>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" onclick="openAnnouncementSettings()">📢 公告</button>
         <button class="btn btn-ghost btn-sm" onclick="openCloudModal()">☁️ 云同步</button>
         <button class="btn btn-ghost btn-sm" onclick="openChangePwdModal()">🔑 改密码</button>
         <button class="btn btn-primary" onclick="openAddModal()" style="background:var(--primary);color:#fff;">＋ 新增链接</button>
@@ -351,6 +431,70 @@
       <button class="btn btn-ghost" onclick="closeCloudModal()">取消</button>
       <button class="btn btn-outline" onclick="testCloudConnection()" style="border-color:var(--gray-300);color:var(--gray-600);">🔄 测试连接</button>
       <button class="btn btn-success" onclick="saveCloudConfig()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Announcement Settings Modal ===== -->
+<div class="modal-overlay" id="announcementSettingsModal">
+  <div class="modal">
+    <h2>📢 公告设置</h2>
+    <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px;">配置弹窗公告和顶部横幅，保存后自动同步到云端。</p>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="announceEnabled" style="width:auto;">
+        <span>启用公告弹窗</span>
+      </label>
+    </div>
+    <div class="form-group">
+      <label>公告图标</label>
+      <select id="announceIcon">
+        <option value="📢">📢 公告</option>
+        <option value="🎉">🎉 庆祝</option>
+        <option value="⚠️">⚠️ 重要</option>
+        <option value="🚨">🚨 紧急</option>
+        <option value="📌">📌 通知</option>
+        <option value="💡">💡 提示</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>公告标题</label>
+      <input type="text" id="announceTitle" placeholder="例如：端午放假通知">
+    </div>
+    <div class="form-group">
+      <label>公告内容</label>
+      <textarea id="announceContent" rows="4" placeholder="输入公告内容..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>频次</label>
+        <select id="announceFrequency">
+          <option value="always">每次都显示</option>
+          <option value="daily">每天一次</option>
+          <option value="weekly">每周一次</option>
+          <option value="once">只显示一次</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>过期日期</label>
+        <input type="date" id="announceExpire">
+      </div>
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="announceShowBar" style="width:auto;" checked>
+        <span>同时显示顶部横幅</span>
+      </label>
+    </div>
+    <div class="form-group">
+      <label>顶部横幅文字（简短）</label>
+      <input type="text" id="announceBarText" placeholder="点击查看详情 →">
+    </div>
+    <div class="error-msg" id="announceError"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeAnnouncementSettings()">取消</button>
+      <button class="btn btn-danger btn-sm" onclick="clearAnnouncement()">清除公告</button>
+      <button class="btn btn-success" onclick="saveAnnouncement()">保存公告</button>
     </div>
   </div>
 </div>
@@ -472,6 +616,7 @@ const STORAGE_KEY = 'loomy_biz_links_v2';
 const PWD_KEY = 'loomy_admin_pwd';
 const ADMIN_SESSION_KEY = 'loomy_admin_session';
 const CLOUD_CONFIG_KEY = 'loomy_cloud_config';
+const ANNOUNCE_CONFIG_KEY = 'loomy_announce_config';
 const DEFAULT_PWD = 'admin123';
 
 let links = [];
@@ -637,6 +782,138 @@ async function testCloudConnection() {
   }
 }
 
+// ===== Announcement System =====
+function getAnnounceConfig() {
+  const stored = localStorage.getItem(ANNOUNCE_CONFIG_KEY);
+  if (stored) {
+    try { return JSON.parse(stored); } catch(e) {}
+  }
+  return null;
+}
+
+function saveAnnounceConfig(config) {
+  localStorage.setItem(ANNOUNCE_CONFIG_KEY, JSON.stringify(config));
+}
+
+function shouldShowAnnouncement(config) {
+  if (!config || !config.enabled) return false;
+  // Check expiry
+  if (config.expire) {
+    const today = new Date().toISOString().split('T')[0];
+    if (today > config.expire) return false;
+  }
+  // Check frequency
+  const lastShown = localStorage.getItem('loomy_announce_last_shown');
+  const freq = config.frequency || 'always';
+  if (freq === 'once' && lastShown) return false;
+  if (freq === 'daily') {
+    const today = new Date().toISOString().split('T')[0];
+    if (lastShown === today) return false;
+  }
+  if (freq === 'weekly') {
+    if (lastShown) {
+      const last = new Date(lastShown);
+      const now = new Date();
+      const diffDays = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+      if (diffDays < 7) return false;
+    }
+  }
+  return true;
+}
+
+function showAnnouncement() {
+  const config = getAnnounceConfig();
+  if (!config) return;
+  // Show bar
+  if (config.showBar !== false && config.barText) {
+    const bar = document.getElementById('announcementBar');
+    document.getElementById('announcementBarText').textContent = config.barText;
+    bar.style.display = 'block';
+  }
+  // Show popup
+  if (shouldShowAnnouncement(config)) {
+    document.getElementById('popupTitle').textContent = config.title || '公告';
+    document.getElementById('popupContent').textContent = config.content || '';
+    document.getElementById('popupTime').textContent = config.date || '';
+    // Update icon
+    const iconEl = document.querySelector('.announcement-popup .popup-icon');
+    if (iconEl && config.icon) iconEl.textContent = config.icon;
+    document.getElementById('announcementPopup').classList.add('show');
+    // Record last shown
+    localStorage.setItem('loomy_announce_last_shown', new Date().toISOString().split('T')[0]);
+  }
+}
+
+function openAnnouncementPopup() {
+  const config = getAnnounceConfig();
+  if (!config) return;
+  document.getElementById('popupTitle').textContent = config.title || '公告';
+  document.getElementById('popupContent').textContent = config.content || '';
+  document.getElementById('popupTime').textContent = config.date || '';
+  const iconEl = document.querySelector('.announcement-popup .popup-icon');
+  if (iconEl && config.icon) iconEl.textContent = config.icon;
+  document.getElementById('announcementPopup').classList.add('show');
+}
+
+function closeAnnouncementPopup() {
+  document.getElementById('announcementPopup').classList.remove('show');
+}
+
+function dismissAnnouncementBar() {
+  document.getElementById('announcementBar').style.display = 'none';
+}
+
+function openAnnouncementSettings() {
+  const config = getAnnounceConfig() || {};
+  document.getElementById('announceEnabled').checked = config.enabled || false;
+  document.getElementById('announceIcon').value = config.icon || '📢';
+  document.getElementById('announceTitle').value = config.title || '';
+  document.getElementById('announceContent').value = config.content || '';
+  document.getElementById('announceFrequency').value = config.frequency || 'always';
+  document.getElementById('announceExpire').value = config.expire || '';
+  document.getElementById('announceShowBar').checked = config.showBar !== false;
+  document.getElementById('announceBarText').value = config.barText || '📢 点击查看公告详情 →';
+  document.getElementById('announceError').style.display = 'none';
+  document.getElementById('announcementSettingsModal').classList.add('show');
+}
+
+function closeAnnouncementSettings() {
+  document.getElementById('announcementSettingsModal').classList.remove('show');
+}
+
+function saveAnnouncement() {
+  const config = {
+    enabled: document.getElementById('announceEnabled').checked,
+    icon: document.getElementById('announceIcon').value,
+    title: document.getElementById('announceTitle').value.trim(),
+    content: document.getElementById('announceContent').value.trim(),
+    frequency: document.getElementById('announceFrequency').value,
+    expire: document.getElementById('announceExpire').value,
+    showBar: document.getElementById('announceShowBar').checked,
+    barText: document.getElementById('announceBarText').value.trim(),
+    date: new Date().toISOString().split('T')[0],
+  };
+  if (config.enabled && !config.title && !config.content) {
+    document.getElementById('announceError').textContent = '请填写公告标题或内容';
+    document.getElementById('announceError').style.display = 'block';
+    return;
+  }
+  saveAnnounceConfig(config);
+  closeAnnouncementSettings();
+  showToast('📢 公告已保存', 'success');
+  showAnnouncement();
+}
+
+function clearAnnouncement() {
+  if (!confirm('确定要清除公告吗？')) return;
+  localStorage.removeItem(ANNOUNCE_CONFIG_KEY);
+  localStorage.removeItem('loomy_announce_last_shown');
+  document.getElementById('announcementBar').style.display = 'none';
+  closeAnnouncementPopup();
+  closeAnnouncementSettings();
+  showToast('🗑️ 公告已清除', 'info');
+}
+
 // ===== Init =====
 function init() {
   loadCloudConfig();
@@ -655,6 +932,8 @@ function init() {
     }
     renderLinks();
     setupLightbox();
+    // Show announcement
+    showAnnouncement();
   })();
 }
 
@@ -1013,6 +1292,8 @@ document.getElementById('pwdModal').addEventListener('click', function(e) { if (
 document.getElementById('cloudModal').addEventListener('click', function(e) { if (e.target === this) closeCloudModal(); });
 document.getElementById('changePwdModal').addEventListener('click', function(e) { if (e.target === this) closeChangePwdModal(); });
 document.getElementById('linkModal').addEventListener('click', function(e) { if (e.target === this) closeLinkModal(); });
+document.getElementById('announcementPopup').addEventListener('click', function(e) { if (e.target === this) closeAnnouncementPopup(); });
+document.getElementById('announcementSettingsModal').addEventListener('click', function(e) { if (e.target === this) closeAnnouncementSettings(); });
 
 // ===== Init =====
 init();
