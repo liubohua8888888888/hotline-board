@@ -1358,7 +1358,6 @@ function closePwdModal() { document.getElementById('pwdModal').classList.remove(
 function openCloudModal() {
   loadCloudConfig();
   document.getElementById('cloudApiKey').value = cloudConfig?.token || '';
-  document.getElementById('cloudBinId').value = cloudConfig?.binId || '';
   document.getElementById('cloudError').style.display = 'none';
   document.getElementById('cloudSuccess').style.display = 'none';
   document.getElementById('cloudModal').classList.add('show');
