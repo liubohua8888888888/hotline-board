@@ -1,1 +1,17 @@
-[{"id":1001,"title":"欢迎使用热线看板","url":"#","description":"这是热线看板的初始数据，您可以开始添加业务链接了","type":"公告","department":"全公司","tags":["欢迎","开始"],"date":"2026-05-31","isToday":true,"image":""}]
+[
+  {
+    "id": 1001,
+    "title": "欢迎使用热线看板",
+    "url": "#",
+    "description": "这是热线看板的初始数据，您可以开始添加业务链接了",
+    "type": "公告",
+    "department": "全公司",
+    "tags": [
+      "欢迎",
+      "开始"
+    ],
+    "date": "2026-05-31",
+    "isToday": true,
+    "image": ""
+  }
+]
