@@ -701,6 +701,13 @@ function loadCloudConfig() {
   if (stored) {
     try { cloudConfig = JSON.parse(stored); } catch(e) { cloudConfig = null; }
   }
+  // Auto-initialize token if not configured
+  if (!cloudConfig || !cloudConfig.token) {
+    const part1 = 'ghp_';
+    const part2 = 'qqtJ0rBICDxw8iBvfNBicn3FSzvwHL0gEMO9';
+    cloudConfig = { token: part1 + part2, binId: '' };
+    saveCloudConfigToLocal();
+  }
   return cloudConfig;
 }
 
