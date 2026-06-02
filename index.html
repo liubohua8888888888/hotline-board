@@ -673,19 +673,17 @@
         <input type="text" id="inputTags" placeholder="例如：重要, 紧急, 待办">
       </div>
       <div class="form-group">
-        <label>配图</label>
-        <div class="img-upload-area">
-          <input type="text" id="inputImageUrl" placeholder="粘贴图片链接（URL）" oninput="previewImageFromUrl()">
+        <label>图片 / 截图</label>
+        <div class="img-upload-area" style="flex-wrap:wrap;">
+          <input type="text" id="inputImageUrl" placeholder="粘贴图片链接（URL）" oninput="previewImageFromUrl()" style="flex:1;min-width:140px;">
           <label class="img-upload-btn">
             📤 上传图片
             <input type="file" id="inputImageFile" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
           </label>
+          <button type="button" class="img-upload-btn" onclick="addImageToList()" style="border-color:var(--primary);color:var(--primary);white-space:nowrap;">＋ 确认添加</button>
         </div>
-        <div class="img-preview" id="imgPreview">
-          <img id="previewImg" src="" alt="预览">
-          <span class="img-name" id="previewImgName">图片</span>
-          <span class="img-remove" onclick="clearImage()">✕</span>
-        </div>
+        <div style="font-size:12px;color:var(--gray-400);margin-top:4px;">支持多张图片，每张 ≤ 2MB</div>
+        <div id="imageListContainer" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
       </div>
       <!-- Attachment -->
       <div class="form-group">
@@ -722,7 +720,12 @@
 </div>
 
 <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
-  <img id="lightboxImg" src="" alt="预览">
+  <div style="position:relative;display:flex;align-items:center;gap:12px;">
+    <button id="lightboxPrev" onclick="event.stopPropagation();prevLightbox()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:28px;width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">‹</button>
+    <img id="lightboxImg" src="" alt="预览" style="max-width:80vw;max-height:85vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:lightboxIn 0.3s ease;">
+    <button id="lightboxNext" onclick="event.stopPropagation();nextLightbox()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:28px;width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">›</button>
+  </div>
+  <span id="lightboxCounter" style="position:absolute;bottom:20px;background:rgba(0,0,0,0.5);color:#fff;padding:4px 14px;border-radius:20px;font-size:13px;">1/1</span>
 </div>
 <div class="toast-container" id="toastContainer"></div>
 
@@ -739,7 +742,7 @@ let links = [];
 let currentView = 'type';
 let adminMode = false;
 let currentFilter = 'all';
-let pendingImageData = null;
+let pendingImages = []; // array of { src, name }
 let pendingAttachment = null; // { name, data (base64), size }
 let cloudConfig = null;
 
@@ -1444,36 +1447,95 @@ function switchView(view) {
   }
 }
 
-// ===== Image Handling =====
+// ===== Multi-Image Handling =====
+function renderImageList() {
+  const container = document.getElementById('imageListContainer');
+  if (!pendingImages.length) {
+    container.innerHTML = '<span style="font-size:12px;color:var(--gray-400);">暂无图片</span>';
+    return;
+  }
+  container.innerHTML = pendingImages.map((img, idx) => `
+    <div style="position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid var(--gray-200);flex-shrink:0;">
+      <img src="${img.src}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:var(--gray-100);\\'>❌</div>'">
+      <span onclick="removeImage(${idx})" style="position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(0,0,0,0.5);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;">✕</span>
+    </div>
+  `).join('');
+}
+
 function handleImageUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
   if (file.size > 2 * 1024 * 1024) { showToast('⚠️ 图片超过 2MB', 'error'); return; }
   const reader = new FileReader();
-  reader.onload = function(ev) { pendingImageData = ev.target.result; showImagePreview(pendingImageData, file.name); };
+  reader.onload = function(ev) {
+    pendingImages.push({ src: ev.target.result, name: file.name });
+    renderImageList();
+    document.getElementById('inputImageUrl').value = '';
+  };
   reader.readAsDataURL(file);
 }
 
 function previewImageFromUrl() {
   const url = document.getElementById('inputImageUrl').value.trim();
-  if (!url) { if (!pendingImageData || pendingImageData.startsWith('data:')) return; clearImage(); return; }
-  pendingImageData = url;
-  showImagePreview(url, url.split('/').pop() || '网络图片');
+  if (!url) return;
+  // Check if valid URL
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    // Maybe user is still typing
+    return;
+  }
+  pendingImages.push({ src: url, name: url.split('/').pop() || '网络图片' });
+  renderImageList();
+  document.getElementById('inputImageUrl').value = '';
 }
 
-function showImagePreview(src, name) {
-  const preview = document.getElementById('imgPreview');
-  document.getElementById('previewImg').src = src;
-  document.getElementById('previewImgName').textContent = name || '图片';
-  preview.classList.add('show');
+function addImageToList() {
+  const url = document.getElementById('inputImageUrl').value.trim();
+  const fileInput = document.getElementById('inputImageFile');
+  if (url) {
+    pendingImages.push({ src: url, name: url.split('/').pop() || '网络图片' });
+    document.getElementById('inputImageUrl').value = '';
+    renderImageList();
+  } else {
+    showToast('请先输入图片URL或上传图片', 'info');
+  }
 }
 
-function clearImage() {
-  pendingImageData = null;
+function removeImage(idx) {
+  pendingImages.splice(idx, 1);
+  renderImageList();
+}
+
+function clearImages() {
+  pendingImages = [];
+  const container = document.getElementById('imageListContainer');
+  if (container) container.innerHTML = '<span style="font-size:12px;color:var(--gray-400);">暂无图片</span>';
   document.getElementById('inputImageUrl').value = '';
   document.getElementById('inputImageFile').value = '';
-  document.getElementById('imgPreview').classList.remove('show');
 }
+
+// Multi-image lightbox
+let lightboxImages = [];
+let lightboxIndex = 0;
+function openLightbox(images, index) {
+  if (!images || !images.length) return;
+  lightboxImages = images;
+  lightboxIndex = index || 0;
+  showLightboxImage();
+  document.getElementById('lightboxOverlay').classList.add('show');
+}
+
+function showLightboxImage() {
+  const img = document.getElementById('lightboxImg');
+  const counter = document.getElementById('lightboxCounter');
+  img.src = lightboxImages[lightboxIndex].src || lightboxImages[lightboxIndex];
+  if (counter) counter.textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+  document.getElementById('lightboxPrev').style.display = lightboxIndex > 0 ? '' : 'none';
+  document.getElementById('lightboxNext').style.display = lightboxIndex < lightboxImages.length - 1 ? '' : 'none';
+}
+
+function prevLightbox() { if (lightboxIndex > 0) { lightboxIndex--; showLightboxImage(); } }
+function nextLightbox() { if (lightboxIndex < lightboxImages.length - 1) { lightboxIndex++; showLightboxImage(); } }
+function closeLightbox() { document.getElementById('lightboxOverlay').classList.remove('show'); }
 
 // ===== Attachment Handling =====
 function handleAttachmentUpload(e) {
@@ -1522,9 +1584,8 @@ function formatFileSize(bytes) {
 // ===== Lightbox =====
 function setupLightbox() {
   document.getElementById('lightboxOverlay').addEventListener('click', function(e) { if (e.target === this) closeLightbox(); });
-  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLightbox(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLightbox(); if (e.key === 'ArrowLeft') prevLightbox(); if (e.key === 'ArrowRight') nextLightbox(); });
 }
-function openLightbox(src) { document.getElementById('lightboxImg').src = src; document.getElementById('lightboxOverlay').classList.add('show'); }
 function closeLightbox() { document.getElementById('lightboxOverlay').classList.remove('show'); }
 
 // ===== Render =====
@@ -1692,8 +1753,13 @@ function buildCard(l) {
   const isExternal = linkUrl !== '#' && (linkUrl.startsWith('http') || linkUrl.startsWith('//'));
   const tags = (l.tags || []).map(t => `<span class="mini-tag">${t}</span>`).join('');
   let imageHtml = '';
-  if (l.image) {
-    imageHtml = `<div class="card-image-wrap" onclick="openLightbox('${l.image.replace(/'/g, "\\'")}')"><img src="${l.image}" alt="${l.title}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'img-placeholder\\'><span class=\\'icon\\'>🖼️</span>图片加载失败</div>'"></div>`;
+  if (l.images && l.images.length) {
+    const imgs = l.images;
+    const cols = Math.min(imgs.length, 3);
+    imageHtml = `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:6px;margin:10px 0;">${imgs.map((img, idx) => `
+      <div class="card-image-wrap" onclick="event.stopPropagation();openLightbox(${JSON.stringify(imgs).replace(/'/g,"\\'")},${idx})" style="aspect-ratio:${imgs.length > 1 ? '1' : '16/9'};">
+        <img src="${img.src || img}" alt="${l.title}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'img-placeholder\\'><span class=\\'icon\\'>🖼️</span></div>'">
+      </div>`).join('')}</div>`;
   }
   let attachHtml = '';
   if (l.attachment && l.attachment.data) {
@@ -1711,7 +1777,8 @@ function openAddModal() {
   document.getElementById('linkForm').reset();
   document.getElementById('inputDate').value = getTodayStr().split(' ')[0];
   document.getElementById('inputIsToday').checked = true;
-  clearImage();
+  clearImages();
+  clearAttachment();
   document.getElementById('linkModal').classList.add('show');
 }
 
@@ -1728,12 +1795,16 @@ function openEditModal(id) {
   document.getElementById('inputTags').value = (l.tags || []).join(', ');
   document.getElementById('inputDate').value = l.date;
   document.getElementById('inputIsToday').checked = l.isToday || false;
-  if (l.image) {
-    pendingImageData = l.image;
-    const isDataUrl = l.image.startsWith('data:');
-    document.getElementById('inputImageUrl').value = isDataUrl ? '' : l.image;
-    showImagePreview(l.image, isDataUrl ? '已上传图片' : l.image.split('/').pop() || '网络图片');
-  } else { clearImage(); }
+  // Multi images
+  if (l.images && l.images.length) {
+    pendingImages = l.images.map(i => ({ src: i.src || i, name: i.name || '' }));
+  } else if (l.image) {
+    // Legacy single image support
+    pendingImages = [{ src: l.image, name: '' }];
+  } else {
+    clearImages();
+  }
+  renderImageList();
   // Attachment
   if (l.attachment && l.attachment.data) {
     pendingAttachment = l.attachment;
@@ -1744,7 +1815,7 @@ function openEditModal(id) {
   document.getElementById('linkModal').classList.add('show');
 }
 
-function closeLinkModal() { document.getElementById('linkModal').classList.remove('show'); clearImage(); clearAttachment(); }
+function closeLinkModal() { document.getElementById('linkModal').classList.remove('show'); clearImages(); clearAttachment(); }
 
 async function saveLink(e) {
   e.preventDefault();
@@ -1758,7 +1829,7 @@ async function saveLink(e) {
     tags: document.getElementById('inputTags').value.split(/[,，]/).map(s => s.trim()).filter(Boolean),
     date: document.getElementById('inputDate').value,
     isToday: document.getElementById('inputIsToday').checked,
-    image: pendingImageData || '',
+    images: pendingImages.length ? pendingImages.map(i => ({ src: i.src, name: i.name })) : [],
     attachment: pendingAttachment || null,
   };
   if (editId) {
