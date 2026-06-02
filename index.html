@@ -454,6 +454,9 @@
         <button class="btn btn-ghost btn-sm" onclick="openAnnouncementSettings()">📢 公告</button>
         <button class="btn btn-ghost btn-sm" onclick="openCloudModal()">☁️ 云同步</button>
         <button class="btn btn-ghost btn-sm" onclick="openChangePwdModal()">🔑 改密码</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportData()">📥 导出</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('importFileInput').click()">📤 导入</button>
+        <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
         <button class="btn btn-primary" onclick="openAddModal()" style="background:var(--primary);color:#fff;">＋ 新增链接</button>
       </div>
     </div>
@@ -471,6 +474,12 @@
     <div class="search-box">
       <span class="search-icon">🔍</span>
       <input type="text" id="searchInput" placeholder="搜索标题、描述、标签..." oninput="renderLinks()">
+    </div>
+    <div class="filter-group" id="dateRangeGroup" style="display:flex;gap:4px;">
+      <span class="filter-chip" onclick="setDateRange('all')" id="drAll" style="background:var(--primary);color:#fff;border-color:var(--primary);padding:6px 10px;font-size:12px;">全部</span>
+      <span class="filter-chip" onclick="setDateRange('today')" id="drToday" style="padding:6px 10px;font-size:12px;">📅 今天</span>
+      <span class="filter-chip" onclick="setDateRange('week')" id="drWeek" style="padding:6px 10px;font-size:12px;">📅 本周</span>
+      <span class="filter-chip" onclick="setDateRange('month')" id="drMonth" style="padding:6px 10px;font-size:12px;">📅 本月</span>
     </div>
     <div class="filter-group" id="filterGroup"></div>
   </div>
@@ -1533,6 +1542,8 @@ function renderLinks() {
   if (currentFilter !== 'all') {
     filtered = filtered.filter(l => l.type === currentFilter || l.department === currentFilter);
   }
+  // Date range filter
+  filtered = filtered.filter(l => isInDateRange(l.date));
   filtered.sort((a, b) => {
     if (a.isToday !== b.isToday) return a.isToday ? -1 : 1;
     return b.date.localeCompare(a.date);
@@ -1592,6 +1603,87 @@ function renderFilterChips(filtered) {
 
 function setFilter(f) { currentFilter = f; renderLinks(); }
 
+// ===== Date Range Filter =====
+let dateRangeFilter = 'all';
+function setDateRange(range) {
+  dateRangeFilter = range;
+  ['drAll','drToday','drWeek','drMonth'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style = id === `dr${range.charAt(0).toUpperCase()+range.slice(1)}` ? 'background:var(--primary);color:#fff;border-color:var(--primary);padding:6px 10px;font-size:12px;' : 'padding:6px 10px;font-size:12px;';
+  });
+  renderLinks();
+}
+
+function isInDateRange(dateStr) {
+  if (dateRangeFilter === 'all') return true;
+  const d = new Date(dateStr);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (dateRangeFilter === 'today') {
+    return dateStr === today.toISOString().split('T')[0];
+  }
+  if (dateRangeFilter === 'week') {
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay());
+    return d >= weekStart;
+  }
+  if (dateRangeFilter === 'month') {
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }
+  return true;
+}
+
+// ===== Import / Export =====
+function exportData() {
+  try {
+    const dataStr = JSON.stringify(links, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `热线看板数据_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('📥 数据已导出', 'success');
+  } catch(e) {
+    showToast('❌ 导出失败', 'error');
+  }
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if (!Array.isArray(imported)) throw new Error('格式错误');
+      // Validate basic structure
+      imported.forEach(item => {
+        if (!item.title) throw new Error('缺少标题字段');
+      });
+      if (!confirm(`确定要导入 ${imported.length} 条数据吗？\n\n⚠️ 这将覆盖当前所有数据！`)) return;
+      links = imported;
+      saveData();
+      renderLinks();
+      showToast(`📤 成功导入 ${imported.length} 条数据`, 'success');
+    } catch(err) {
+      showToast('❌ 导入失败：' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ===== Click Tracking =====
+function trackClick(id) {
+  const l = links.find(x => x.id == id);
+  if (!l) return;
+  if (!l.clicks) l.clicks = 0;
+  l.clicks++;
+  saveData();
+}
+
 function buildCard(l) {
   const isToday = l.isToday || l.date === getTodayStr().split(' ')[0];
   const todayClass = isToday ? 'today' : '';
@@ -1609,7 +1701,7 @@ function buildCard(l) {
     attachHtml = `<div style="margin-top:8px;padding:8px 10px;background:var(--gray-50);border-radius:6px;border:1px solid var(--gray-200);display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">${getFileIcon(ext)}</span><span style="font-size:12px;color:var(--gray-600);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.attachment.name}</span><span style="font-size:11px;color:var(--gray-400);white-space:nowrap;">${l.attachment.size ? formatFileSize(l.attachment.size) : ''}</span><a href="${l.attachment.data}" download="${l.attachment.name}" class="btn btn-primary btn-sm" style="padding:3px 10px;font-size:11px;">⬇ 下载</a></div>`;
   }
   const adminActions = adminMode ? `<div class="admin-actions" style="display:flex;gap:6px;flex-shrink:0;"><button class="btn btn-ghost btn-sm admin-edit" data-id="${l.id}">✏️</button><button class="btn btn-danger btn-sm admin-delete" data-id="${l.id}">🗑️</button></div>` : '';
-  return `<div class="link-card ${todayClass}">${todayBadge}<div class="link-card-header"><span class="type-tag type-${l.type}">${l.type}</span>${adminActions}</div><h3>${l.title}</h3>${l.description ? `<p class="desc">${l.description}</p>` : ''}${imageHtml}${attachHtml}<div class="meta"><span class="meta-item"><span class="dept-tag">🏢 ${l.department}</span></span><span class="meta-item">📅 ${l.date}</span></div>${tags ? `<div class="tag-list">${tags}</div>` : ''}<div class="link-card-actions">${isExternal ? `<a href="${linkUrl}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">🔗 打开链接</a>` : `<span style="font-size:12px;color:var(--gray-400);padding:6px 0;">📄 纯文本内容</span>`}<button class="btn btn-ghost btn-sm" onclick="copyLink('${encodeURIComponent(linkUrl)}', '${l.title.replace(/'/g, "\\'")}')">📋 复制</button></div></div>`;
+  return `<div class="link-card ${todayClass}">${todayBadge}<div class="link-card-header"><span class="type-tag type-${l.type}">${l.type}</span>${adminActions}</div><h3>${l.title}</h3>${l.description ? `<p class="desc">${l.description}</p>` : ''}${imageHtml}${attachHtml}<div class="meta"><span class="meta-item"><span class="dept-tag">🏢 ${l.department}</span></span><span class="meta-item">📅 ${l.date}</span>${adminMode ? `<span class="meta-item" title="点击次数">👁️ ${l.clicks || 0}</span>` : ''}</div>${tags ? `<div class="tag-list">${tags}</div>` : ''}<div class="link-card-actions">${isExternal ? `<a href="${linkUrl}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" onclick="trackClick(${l.id})">🔗 打开链接</a>` : `<span style="font-size:12px;color:var(--gray-400);padding:6px 0;">📄 纯文本内容</span>`}<button class="btn btn-ghost btn-sm" onclick="copyLink('${encodeURIComponent(linkUrl)}', '${l.title.replace(/'/g, "\\'")}')">📋 复制</button></div></div>`;
 }
 
 // ===== CRUD =====
