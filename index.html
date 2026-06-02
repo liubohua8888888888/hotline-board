@@ -1426,7 +1426,7 @@ function closePwdModal() { document.getElementById('pwdModal').classList.remove(
 // ===== Cloud Modal =====
 function openCloudModal() {
   loadCloudConfig();
-  document.getElementById('cloudApiKey').value = cloudConfig?.apiKey || '';
+  document.getElementById('cloudApiKey').value = cloudConfig?.token || '';
   document.getElementById('cloudBinId').value = cloudConfig?.binId || '';
   document.getElementById('cloudError').style.display = 'none';
   document.getElementById('cloudSuccess').style.display = 'none';
@@ -1896,7 +1896,7 @@ async function saveLink(e) {
   closeLinkModal();
   renderLinks();
   // Auto sync to cloud
-  if (cloudConfig && cloudConfig.apiKey) {
+  if (cloudConfig && cloudConfig.token) {
     await syncToCloud();
   }
 }
@@ -1910,7 +1910,7 @@ async function deleteLink(id) {
   if (item) addChangeLog('delete', item);
   showToast('🗑️ 链接已删除', 'info');
   // Auto sync to cloud
-  if (cloudConfig && cloudConfig.apiKey) {
+  if (cloudConfig && cloudConfig.token) {
     await syncToCloud();
   }
 }
