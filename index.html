@@ -678,6 +678,22 @@
           <span class="img-remove" onclick="clearImage()">✕</span>
         </div>
       </div>
+      <!-- Attachment -->
+      <div class="form-group">
+        <label>附件（PDF / Word / Excel）</label>
+        <div class="img-upload-area">
+          <label class="img-upload-btn" style="border-style:solid;">
+            📎 选择附件
+            <input type="file" id="inputAttachment" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar" style="display:none" onchange="handleAttachmentUpload(event)">
+          </label>
+          <span style="font-size:12px;color:var(--gray-400);line-height:36px;">支持 PDF、Word、Excel 等，最大 10MB</span>
+        </div>
+        <div class="img-preview" id="attachmentPreview">
+          <span style="font-size:20px;" id="attachmentIcon">📎</span>
+          <span class="img-name" id="attachmentName">未选择文件</span>
+          <span class="img-remove" onclick="clearAttachment()">✕</span>
+        </div>
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label>更新日期</label>
@@ -715,6 +731,7 @@ let currentView = 'type';
 let adminMode = false;
 let currentFilter = 'all';
 let pendingImageData = null;
+let pendingAttachment = null; // { name, data (base64), size }
 let cloudConfig = null;
 
 const DEFAULT_LINKS = [
@@ -1449,6 +1466,50 @@ function clearImage() {
   document.getElementById('imgPreview').classList.remove('show');
 }
 
+// ===== Attachment Handling =====
+function handleAttachmentUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { showToast('⚠️ 附件超过 10MB', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    pendingAttachment = {
+      name: file.name,
+      data: ev.target.result,
+      size: file.size,
+      type: file.name.split('.').pop().toLowerCase(),
+    };
+    showAttachmentPreview(file.name);
+  };
+  reader.readAsDataURL(file);
+}
+
+function showAttachmentPreview(name) {
+  const preview = document.getElementById('attachmentPreview');
+  document.getElementById('attachmentName').textContent = name;
+  const iconMap = { pdf:'📕', doc:'📘', docx:'📘', xls:'📗', xlsx:'📗', ppt:'📙', pptx:'📙', txt:'📄', zip:'📦', rar:'📦' };
+  const ext = name.split('.').pop().toLowerCase();
+  document.getElementById('attachmentIcon').textContent = iconMap[ext] || '📎';
+  preview.classList.add('show');
+}
+
+function clearAttachment() {
+  pendingAttachment = null;
+  document.getElementById('inputAttachment').value = '';
+  document.getElementById('attachmentPreview').classList.remove('show');
+}
+
+function getFileIcon(ext) {
+  const map = { pdf:'📕', doc:'📘', docx:'📘', xls:'📗', xlsx:'📗', ppt:'📙', pptx:'📙', txt:'📄', zip:'📦', rar:'📦' };
+  return map[ext] || '📎';
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + 'B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + 'KB';
+  return (bytes/(1024*1024)).toFixed(1) + 'MB';
+}
+
 // ===== Lightbox =====
 function setupLightbox() {
   document.getElementById('lightboxOverlay').addEventListener('click', function(e) { if (e.target === this) closeLightbox(); });
@@ -1542,8 +1603,13 @@ function buildCard(l) {
   if (l.image) {
     imageHtml = `<div class="card-image-wrap" onclick="openLightbox('${l.image.replace(/'/g, "\\'")}')"><img src="${l.image}" alt="${l.title}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'img-placeholder\\'><span class=\\'icon\\'>🖼️</span>图片加载失败</div>'"></div>`;
   }
+  let attachHtml = '';
+  if (l.attachment && l.attachment.data) {
+    const ext = l.attachment.name.split('.').pop().toLowerCase();
+    attachHtml = `<div style="margin-top:8px;padding:8px 10px;background:var(--gray-50);border-radius:6px;border:1px solid var(--gray-200);display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">${getFileIcon(ext)}</span><span style="font-size:12px;color:var(--gray-600);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.attachment.name}</span><span style="font-size:11px;color:var(--gray-400);white-space:nowrap;">${l.attachment.size ? formatFileSize(l.attachment.size) : ''}</span><a href="${l.attachment.data}" download="${l.attachment.name}" class="btn btn-primary btn-sm" style="padding:3px 10px;font-size:11px;">⬇ 下载</a></div>`;
+  }
   const adminActions = adminMode ? `<div class="admin-actions" style="display:flex;gap:6px;flex-shrink:0;"><button class="btn btn-ghost btn-sm admin-edit" data-id="${l.id}">✏️</button><button class="btn btn-danger btn-sm admin-delete" data-id="${l.id}">🗑️</button></div>` : '';
-  return `<div class="link-card ${todayClass}">${todayBadge}<div class="link-card-header"><span class="type-tag type-${l.type}">${l.type}</span>${adminActions}</div><h3>${l.title}</h3>${l.description ? `<p class="desc">${l.description}</p>` : ''}${imageHtml}<div class="meta"><span class="meta-item"><span class="dept-tag">🏢 ${l.department}</span></span><span class="meta-item">📅 ${l.date}</span></div>${tags ? `<div class="tag-list">${tags}</div>` : ''}<div class="link-card-actions">${isExternal ? `<a href="${linkUrl}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">🔗 打开链接</a>` : `<span style="font-size:12px;color:var(--gray-400);padding:6px 0;">📄 纯文本内容</span>`}<button class="btn btn-ghost btn-sm" onclick="copyLink('${encodeURIComponent(linkUrl)}', '${l.title.replace(/'/g, "\\'")}')">📋 复制</button></div></div>`;
+  return `<div class="link-card ${todayClass}">${todayBadge}<div class="link-card-header"><span class="type-tag type-${l.type}">${l.type}</span>${adminActions}</div><h3>${l.title}</h3>${l.description ? `<p class="desc">${l.description}</p>` : ''}${imageHtml}${attachHtml}<div class="meta"><span class="meta-item"><span class="dept-tag">🏢 ${l.department}</span></span><span class="meta-item">📅 ${l.date}</span></div>${tags ? `<div class="tag-list">${tags}</div>` : ''}<div class="link-card-actions">${isExternal ? `<a href="${linkUrl}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">🔗 打开链接</a>` : `<span style="font-size:12px;color:var(--gray-400);padding:6px 0;">📄 纯文本内容</span>`}<button class="btn btn-ghost btn-sm" onclick="copyLink('${encodeURIComponent(linkUrl)}', '${l.title.replace(/'/g, "\\'")}')">📋 复制</button></div></div>`;
 }
 
 // ===== CRUD =====
@@ -1576,10 +1642,17 @@ function openEditModal(id) {
     document.getElementById('inputImageUrl').value = isDataUrl ? '' : l.image;
     showImagePreview(l.image, isDataUrl ? '已上传图片' : l.image.split('/').pop() || '网络图片');
   } else { clearImage(); }
+  // Attachment
+  if (l.attachment && l.attachment.data) {
+    pendingAttachment = l.attachment;
+    showAttachmentPreview(l.attachment.name);
+  } else {
+    clearAttachment();
+  }
   document.getElementById('linkModal').classList.add('show');
 }
 
-function closeLinkModal() { document.getElementById('linkModal').classList.remove('show'); clearImage(); }
+function closeLinkModal() { document.getElementById('linkModal').classList.remove('show'); clearImage(); clearAttachment(); }
 
 async function saveLink(e) {
   e.preventDefault();
@@ -1594,6 +1667,7 @@ async function saveLink(e) {
     date: document.getElementById('inputDate').value,
     isToday: document.getElementById('inputIsToday').checked,
     image: pendingImageData || '',
+    attachment: pendingAttachment || null,
   };
   if (editId) {
     const idx = links.findIndex(l => l.id == editId);
