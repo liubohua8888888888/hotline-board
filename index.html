@@ -1,1082 +1,609 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>热线看板</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --primary: #4f6ef7;
-    --primary-light: #eef1ff;
-    --primary-dark: #3b55d9;
-    --success: #22c55e;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --gray-50: #f9fafb;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
-    --gray-400: #9ca3af;
-    --gray-500: #6b7280;
-    --gray-600: #4b5563;
-    --gray-700: #374151;
-    --gray-800: #1f2937;
-    --gray-900: #111827;
-    --radius: 12px;
-    --radius-sm: 8px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
-    --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
-    --transition: all 0.2s ease;
-    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
-  }
-  body {
-    font-family: var(--font);
-    background: var(--gray-50);
-    color: var(--gray-800);
-    min-height: 100vh;
-  }
-  /* Announcement Banner */
-  .announcement-bar {
-    display: none;
-    background: linear-gradient(135deg, #f59e0b, #ef4444);
-    color: #fff;
-    text-align: center;
-    padding: 10px 20px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-    position: relative;
-  }
-  .announcement-bar:hover { opacity: 0.95; }
-  .announcement-bar .close-bar {
-    position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-    background: none; border: none; color: #fff; font-size: 18px;
-    cursor: pointer; opacity: 0.7; padding: 4px 8px;
-  }
-  .announcement-bar .close-bar:hover { opacity: 1; }
-  /* Announcement Popup Modal */
-  .announcement-popup {
-    display: none; position: fixed; inset: 0; z-index: 1001;
-    background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
-    backdrop-filter: blur(4px); padding: 20px;
-  }
-  .announcement-popup.show { display: flex; }
-  .announcement-popup .popup-card {
-    background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    width: 100%; max-width: 480px; max-height: 80vh; overflow-y: auto;
-    padding: 32px; animation: modalIn 0.3s ease; position: relative;
-  }
-  .announcement-popup .popup-card .popup-close {
-    position: absolute; top: 16px; right: 16px;
-    background: var(--gray-100); border: none; border-radius: 50%;
-    width: 32px; height: 32px; font-size: 16px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--gray-500); transition: var(--transition);
-  }
-  .announcement-popup .popup-card .popup-close:hover { background: var(--gray-200); }
-  .announcement-popup .popup-card .popup-icon {
-    font-size: 40px; text-align: center; margin-bottom: 12px;
-  }
-  .announcement-popup .popup-card h2 {
-    font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 8px;
-    color: var(--gray-800);
-  }
-  .announcement-popup .popup-card .popup-time {
-    text-align: center; font-size: 12px; color: var(--gray-400); margin-bottom: 16px;
-  }
-  .announcement-popup .popup-card .popup-content {
-    font-size: 14px; line-height: 1.8; color: var(--gray-700);
-    white-space: pre-wrap;
-  }
-  .announcement-popup .popup-card .popup-btn {
-    display: block; width: 100%; margin-top: 20px;
-    padding: 10px; border: none; border-radius: 8px;
-    background: var(--primary); color: #fff; font-size: 14px; font-weight: 500;
-    cursor: pointer; font-family: var(--font); transition: var(--transition);
-  }
-  .announcement-popup .popup-card .popup-btn:hover { background: var(--primary-dark); }
-  .header {
-    background: linear-gradient(135deg, #4f6ef7 0%, #6c5ce7 50%, #a855f7 100%);
-    color: #fff; padding: 28px 32px 24px;
-    position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 2px 12px rgba(79,110,247,0.3);
-  }
-  .header-inner {
-    max-width: 1400px; margin: 0 auto;
-    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
-  }
-  .header-left { display: flex; align-items: center; gap: 16px; }
-  .header-icon {
-    width: 44px; height: 44px;
-    background: rgba(255,255,255,0.2); border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; backdrop-filter: blur(4px);
-  }
-  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
-  .header p { font-size: 13px; opacity: 0.85; margin-top: 2px; }
-  .header-right { display: flex; align-items: center; gap: 10px; }
-  .header-date {
-    background: rgba(255,255,255,0.15); padding: 6px 14px;
-    border-radius: 20px; font-size: 13px; backdrop-filter: blur(4px);
-  }
-  .sync-status {
-    font-size: 12px; padding: 4px 10px; border-radius: 12px;
-    background: rgba(255,255,255,0.12); backdrop-filter: blur(4px);
-    display: flex; align-items: center; gap: 4px;
-  }
-  .sync-status.online { background: rgba(34,197,94,0.25); }
-  .sync-status.offline { background: rgba(239,68,68,0.2); }
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 18px; border: none; border-radius: var(--radius-sm);
-    font-size: 14px; font-weight: 500; cursor: pointer;
-    font-family: var(--font); transition: var(--transition); text-decoration: none;
-  }
-  .btn-primary { background: #fff; color: var(--primary); }
-  .btn-primary:hover { background: var(--gray-100); transform: translateY(-1px); }
-  .btn-outline { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.4); }
-  .btn-outline:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.7); }
-  .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
-  .btn-success { background: var(--success); color: #fff; }
-  .btn-success:hover { background: #16a34a; }
-  .btn-danger { background: var(--danger); color: #fff; }
-  .btn-danger:hover { background: #dc2626; }
-  .btn-ghost { background: transparent; color: var(--gray-600); }
-  .btn-ghost:hover { background: var(--gray-100); }
-  .btn-link { background: transparent; color: var(--primary); padding: 0; font-size: 13px; }
-  .btn-link:hover { text-decoration: underline; }
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--primary:#4f6ef7;--primary-light:#eef1ff;--primary-dark:#3b55d9;--success:#22c55e;--warning:#f59e0b;--danger:#ef4444;--gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;--gray-900:#111827;--radius:12px;--radius-sm:8px;--shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);--shadow-lg:0 10px 25px rgba(0,0,0,.1);--transition:all .2s;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif}
+body{font-family:var(--font);background:var(--gray-50);color:var(--gray-800);min-height:100vh}
+.header{background:linear-gradient(135deg,#4f6ef7,#6c5ce7,#a855f7);color:#fff;padding:24px 32px 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(79,110,247,.3)}
+.header-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.header-left{display:flex;align-items:center;gap:14px}
+.header-icon{width:40px;height:40px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.header h1{font-size:20px;font-weight:700}
+.header p{font-size:12px;opacity:.85;margin-top:2px}
+.header-right{display:flex;align-items:center;gap:8px}
+.header-date{background:rgba(255,255,255,.15);padding:4px 12px;border-radius:16px;font-size:12px}.sync-status{font-size:11px;padding:3px 8px;border-radius:10px;background:rgba(255,255,255,.1)}.sync-status.online{background:rgba(34,197,94,.25)}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:7px 16px;border:none;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font);transition:var(--transition);text-decoration:none}
+.btn-primary{background:#fff;color:var(--primary)}.btn-primary:hover{background:var(--gray-100)}
+.btn-outline{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.4)}.btn-outline:hover{background:rgba(255,255,255,.1)}
+.btn-sm{padding:4px 10px;font-size:11px;border-radius:5px}
+.btn-success{background:var(--success);color:#fff}.btn-danger{background:var(--danger);color:#fff}
+.btn-ghost{background:transparent;color:var(--gray-600)}.btn-ghost:hover{background:var(--gray-100)}
+.stats-bar{max-width:1400px;margin:-12px auto 0;padding:0 24px;position:relative;z-index:10}
+.stats-inner{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-lg);display:grid;grid-template-columns:repeat(4,1fr);overflow:hidden}
+.stat-item{padding:16px 12px;text-align:center}.stat-item+.stat-item{border-left:1px solid var(--gray-100)}
+.stat-number{font-size:22px;font-weight:700;color:var(--primary)}.stat-label{font-size:11px;color:var(--gray-500);margin-top:2px}
+.main{max-width:1400px;margin:0 auto;padding:16px 24px 40px}
+.toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.search-box{flex:1;min-width:180px;position:relative}
+.search-box input{width:100%;padding:8px 14px 8px 36px;border:2px solid var(--gray-200);border-radius:6px;font-size:13px;font-family:var(--font);background:#fff;outline:none;transition:var(--transition)}
+.search-box input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,110,247,.1)}
+.search-box .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gray-400);font-size:14px}
+.filter-group{display:flex;flex-wrap:wrap;gap:4px}
+.filter-chip{padding:4px 10px;border-radius:14px;font-size:12px;cursor:pointer;transition:var(--transition);border:1.5px solid var(--gray-200);background:#fff;color:var(--gray-600);user-select:none;font-family:var(--font)}
+.filter-chip:hover{border-color:var(--primary);color:var(--primary)}.filter-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.nav-tabs{display:flex;gap:2px;margin-bottom:14px;background:var(--gray-100);padding:3px;border-radius:6px;width:fit-content;flex-wrap:wrap}
+.nav-tab{padding:6px 14px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;transition:var(--transition);border:none;background:transparent;color:var(--gray-500);font-family:var(--font)}
+.nav-tab.active{background:#fff;color:var(--primary);box-shadow:var(--shadow)}
+.links-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+.link-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;transition:var(--transition);border:1px solid transparent;position:relative;cursor:pointer;display:flex;flex-direction:column}
+.link-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08);border-color:var(--gray-200);transform:translateY(-2px)}
+.link-card.today{border-color:var(--primary);background:linear-gradient(135deg,#fff,var(--primary-light))}
+.today-badge{position:absolute;top:-8px;right:12px;background:var(--primary);color:#fff;font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600;box-shadow:0 2px 6px rgba(79,110,247,.3)}
+.link-card .type-tag{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:500;flex-shrink:0}
+.type-日报{background:#dbeafe;color:#1d4ed8}.type-周报{background:#dcfce7;color:#15803d}
+.type-公告{background:#fef3c7;color:#b45309}.type-通知{background:#fce7f3;color:#be185d}
+.type-项目文档{background:#ede9fe;color:#6d28d9}.type-其他{background:var(--gray-100);color:var(--gray-600)}
+.link-card h3{font-size:14px;font-weight:600;color:var(--gray-800);margin:6px 0 4px;line-height:1.4}
+.link-card .desc{font-size:12px;color:var(--gray-500);line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.link-card .meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;font-size:11px;color:var(--gray-400)}
+.meta .dept-tag{background:var(--gray-100);padding:1px 6px;border-radius:3px;color:var(--gray-600)}
+.tag-list{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.mini-tag{font-size:10px;padding:1px 6px;border-radius:3px;background:var(--gray-100);color:var(--gray-600)}
+.link-card-actions{display:flex;gap:6px;margin-top:auto;border-top:1px solid var(--gray-100);padding-top:10px}
+.link-card-actions .btn{padding:4px 10px;font-size:11px;border-radius:5px}
+.card-images{display:grid;gap:4px;margin:8px 0}.card-images img{width:100%;height:100%;object-fit:cover;border-radius:4px;display:block}
+.empty-state{text-align:center;padding:50px 20px;color:var(--gray-400)}.empty-state .empty-icon{font-size:40px;margin-bottom:10px}.empty-state p{font-size:14px}
+.section-title{font-size:15px;font-weight:600;color:var(--gray-800);margin-bottom:10px;margin-top:16px;display:flex;align-items:center;gap:6px}
+.section-title .count{font-size:11px;font-weight:400;color:var(--gray-400)}.group-section{margin-bottom:24px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:16px;box-shadow:var(--shadow-lg);width:100%;max-width:520px;max-height:85vh;overflow-y:auto;padding:24px;animation:modalIn .25s ease}
+.modal-sm{max-width:380px}@keyframes modalIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.modal h2{font-size:17px;font-weight:700;margin-bottom:16px}
+.modal .form-group{margin-bottom:12px}.modal label{display:block;font-size:12px;font-weight:500;color:var(--gray-700);margin-bottom:3px}
+.modal input,.modal select,.modal textarea{width:100%;padding:8px 10px;border:1.5px solid var(--gray-200);border-radius:6px;font-size:13px;font-family:var(--font);outline:none;transition:var(--transition)}
+.modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,110,247,.1)}
+.modal textarea{resize:vertical;min-height:50px}
+.modal .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;border-top:1px solid var(--gray-100);padding-top:14px}
+.modal .modal-actions .btn{padding:8px 18px}
+.modal .error-msg{color:var(--danger);font-size:12px;display:none;margin-top:4px}
+.lightbox-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;align-items:center;justify-content:center;padding:20px}
+.lightbox-overlay.show{display:flex}.lightbox-overlay img{max-width:85vw;max-height:85vh;object-fit:contain;border-radius:8px}
+.lightbox-nav{background:rgba(255,255,255,.15);border:none;color:#fff;font-size:26px;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:var(--transition)}
+.lightbox-nav:hover{background:rgba(255,255,255,.25)}
+.toast-container{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:6px}
+.toast{padding:10px 18px;border-radius:8px;color:#fff;font-size:13px;box-shadow:var(--shadow-lg);animation:toastIn .3s}
+.toast.success{background:var(--success)}.toast.error{background:var(--danger)}.toast.info{background:var(--primary)}
+@keyframes toastIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@media(max-width:768px){.header{padding:16px}.stats-inner{grid-template-columns:repeat(2,1fr)}.main{padding:12px}.links-grid{grid-template-columns:1fr}.modal .form-row{grid-template-columns:1fr}.toolbar{flex-direction:column;align-items:stretch}.search-box{min-width:auto}}
+</style></head><body>
 
-  .stats-bar { max-width: 1400px; margin: -14px auto 0; padding: 0 24px; position: relative; z-index: 10; }
-  .stats-inner { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-lg); display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px; overflow: hidden; }
-  .stats-inner > .stat-item { padding: 18px 20px; text-align: center; }
-  .stat-item:not(:last-child) { border-right: 1px solid var(--gray-100); }
-  .stat-number { font-size: 24px; font-weight: 700; color: var(--primary); }
-  .stat-label { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+<div class="header"><div class="header-inner">
+<div class="header-left"><div class="header-icon">📋</div><div><h1>热线看板</h1><p>业务更新 · 数据报告 · 每日跟进</p></div></div>
+<div class="header-right"><span class="sync-status" id="syncStatus">☁️ 本地</span><span class="header-date" id="headerDate"></span><button class="btn btn-outline btn-sm" onclick="toggleAdmin()">🔧 管理</button></div>
+</div></div>
 
-  .main { max-width: 1400px; margin: 0 auto; padding: 20px 24px 40px; }
-  .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
-  .search-box { flex: 1; min-width: 220px; position: relative; }
-  .search-box input {
-    width: 100%; padding: 10px 16px 10px 40px;
-    border: 2px solid var(--gray-200); border-radius: var(--radius-sm);
-    font-size: 14px; font-family: var(--font); background: #fff; transition: var(--transition); outline: none;
-  }
-  .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,110,247,0.12); }
-  .search-box .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-400); font-size: 16px; }
-  .filter-group { display: flex; flex-wrap: wrap; gap: 8px; }
-  .filter-chip {
-    padding: 6px 14px; border-radius: 20px; font-size: 13px; cursor: pointer;
-    transition: var(--transition); border: 1.5px solid var(--gray-200); background: #fff;
-    color: var(--gray-600); user-select: none; font-family: var(--font);
-  }
-  .filter-chip:hover { border-color: var(--primary); color: var(--primary); }
-  .filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+<div class="stats-bar"><div class="stats-inner">
+<div class="stat-item"><div class="stat-number" id="statTotal">0</div><div class="stat-label">全部链接</div></div>
+<div class="stat-item"><div class="stat-number" id="statToday">0</div><div class="stat-label">今日更新</div></div>
+<div class="stat-item"><div class="stat-number" id="statTypes">0</div><div class="stat-label">分类数</div></div>
+<div class="stat-item"><div class="stat-number" id="statDepts">0</div><div class="stat-label">涉及部门</div></div>
+</div></div>
 
-  .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
-  .link-card {
-    background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
-    padding: 20px; transition: var(--transition); border: 1px solid transparent;
-    position: relative; cursor: default; display: flex; flex-direction: column;
-  }
-  .link-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-color: var(--gray-200); transform: translateY(-2px); }
-  .link-card.today { border-color: var(--primary); background: linear-gradient(135deg, #fff 0%, var(--primary-light) 100%); }
-  .link-card .today-badge {
-    position: absolute; top: -8px; right: 16px; background: var(--primary); color: #fff;
-    font-size: 11px; padding: 2px 10px; border-radius: 10px; font-weight: 600;
-    box-shadow: 0 2px 6px rgba(79,110,247,0.3);
-  }
-  .link-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-  .link-card-header .type-tag { font-size: 11px; padding: 2px 10px; border-radius: 10px; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
-  .type-tag.type-日报 { background: #dbeafe; color: #1d4ed8; }
-  .type-tag.type-周报 { background: #dcfce7; color: #15803d; }
-  .type-tag.type-公告 { background: #fef3c7; color: #b45309; }
-  .type-tag.type-通知 { background: #fce7f3; color: #be185d; }
-  .type-tag.type-项目文档 { background: #ede9fe; color: #6d28d9; }
-  .type-tag.type-其他 { background: var(--gray-100); color: var(--gray-600); }
-  .link-card h3 { font-size: 15px; font-weight: 600; color: var(--gray-800); margin: 8px 0 4px; line-height: 1.4; }
-  .link-card .desc { font-size: 13px; color: var(--gray-500); line-height: 1.5; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .link-card .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .meta-item { font-size: 12px; color: var(--gray-400); display: flex; align-items: center; gap: 4px; }
-  .meta-item .dept-tag { background: var(--gray-100); padding: 1px 8px; border-radius: 4px; color: var(--gray-600); }
-  .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-  .mini-tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: var(--gray-100); color: var(--gray-600); }
-  .card-image-wrap {
-    margin: 10px 0; border-radius: 8px; overflow: hidden; cursor: pointer;
-    position: relative; background: var(--gray-100); aspect-ratio: 16/9;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .card-image-wrap img { width: 100%; height: 100%; object-fit: cover; transition: var(--transition); }
-  .card-image-wrap:hover img { transform: scale(1.03); }
-  .card-image-wrap .img-placeholder { color: var(--gray-400); font-size: 13px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .card-image-wrap .img-placeholder .icon { font-size: 28px; }
-  .link-card-actions { display: flex; gap: 8px; margin-top: auto; border-top: 1px solid var(--gray-100); padding-top: 12px; }
-  .link-card-actions .btn { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
-
-  .empty-state { text-align: center; padding: 60px 20px; color: var(--gray-400); }
-  .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
-  .empty-state p { font-size: 15px; }
-
-  .modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-    z-index: 1000; align-items: center; justify-content: center;
-    backdrop-filter: blur(4px); padding: 20px;
-  }
-  .modal-overlay.show { display: flex; }
-  .modal {
-    background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-lg);
-    width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto;
-    padding: 28px; animation: modalIn 0.25s ease;
-  }
-  .modal-sm { max-width: 400px; }
-  @keyframes modalIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  .modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
-  .modal .form-group { margin-bottom: 16px; }
-  .modal label { display: block; font-size: 13px; font-weight: 500; color: var(--gray-700); margin-bottom: 4px; }
-  .modal input, .modal select, .modal textarea {
-    width: 100%; padding: 9px 12px; border: 1.5px solid var(--gray-200);
-    border-radius: 6px; font-size: 14px; font-family: var(--font);
-    transition: var(--transition); outline: none;
-  }
-  .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,110,247,0.1); }
-  .modal textarea { resize: vertical; min-height: 60px; }
-  .modal .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .modal .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 1px solid var(--gray-100); padding-top: 16px; }
-  .modal .modal-actions .btn { padding: 9px 20px; }
-  .modal .error-msg { color: var(--danger); font-size: 13px; margin-top: 4px; display: none; }
-  .modal .success-msg { color: var(--success); font-size: 13px; margin-top: 4px; display: none; }
-  .modal .hint { font-size: 12px; color: var(--gray-500); margin-top: 4px; }
-
-  .img-upload-area { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
-  .img-upload-area input[type="text"] { flex: 1; min-width: 160px; }
-  .img-upload-btn {
-    padding: 9px 14px; border: 1.5px dashed var(--gray-300); border-radius: 6px;
-    background: var(--gray-50); cursor: pointer; font-size: 13px; color: var(--gray-500);
-    transition: var(--transition); font-family: var(--font); white-space: nowrap;
-  }
-  .img-upload-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
-  .img-preview { margin-top: 8px; padding: 8px; background: var(--gray-50); border-radius: 6px; display: none; align-items: center; gap: 10px; border: 1px solid var(--gray-200); }
-  .img-preview.show { display: flex; }
-  .img-preview img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; }
-  .img-preview .img-name { font-size: 12px; color: var(--gray-500); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .img-preview .img-remove { cursor: pointer; color: var(--danger); font-size: 18px; line-height: 1; padding: 0 4px; }
-
-  .lightbox-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-    z-index: 2000; align-items: center; justify-content: center;
-    padding: 40px; cursor: zoom-out;
-  }
-  .lightbox-overlay.show { display: flex; }
-  .lightbox-overlay img { max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: lightboxIn 0.3s ease; }
-  @keyframes lightboxIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-  .password-icon { width: 64px; height: 64px; background: linear-gradient(135deg, var(--primary-light), #e0e7ff); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px; }
-
-  @media (max-width: 768px) {
-    .header { padding: 20px 16px 18px; }
-    .header h1 { font-size: 18px; }
-    .header p { font-size: 12px; }
-    .header-date, .sync-status { font-size: 11px; padding: 3px 8px; }
-    .main { padding: 16px; }
-    .links-grid { grid-template-columns: 1fr; }
-    .stats-bar { padding: 0 16px; }
-    .stats-inner { grid-template-columns: repeat(2, 1fr); }
-    .stats-inner > .stat-item:nth-child(2) { border-right: none; }
-    .toolbar { flex-direction: column; align-items: stretch; }
-    .search-box { min-width: auto; }
-    .modal .form-row, .modal .form-row-3 { grid-template-columns: 1fr; }
-  }
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
-
-  .nav-tabs { display: flex; gap: 2px; margin-bottom: 20px; background: var(--gray-100); padding: 3px; border-radius: var(--radius-sm); width: fit-content; flex-wrap: wrap; }
-  .nav-tab { padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: var(--transition); border: none; background: transparent; color: var(--gray-500); font-family: var(--font); }
-  .nav-tab.active { background: #fff; color: var(--primary); box-shadow: var(--shadow); }
-  .nav-tab:hover:not(.active) { color: var(--gray-700); }
-  .section-title { font-size: 16px; font-weight: 600; color: var(--gray-800); margin-bottom: 12px; margin-top: 20px; display: flex; align-items: center; gap: 8px; }
-  .section-title .count { font-size: 12px; font-weight: 400; color: var(--gray-400); }
-  .group-section { margin-bottom: 32px; }
-
-  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-  .toast { padding: 12px 20px; border-radius: var(--radius-sm); color: #fff; font-size: 14px; box-shadow: var(--shadow-lg); animation: toastIn 0.3s ease; display: flex; align-items: center; gap: 8px; }
-  .toast.success { background: var(--success); }
-  .toast.error { background: var(--danger); }
-  .toast.info { background: var(--primary); }
-  @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
-  .admin-badge { font-size: 11px; background: var(--warning); color: #fff; padding: 1px 8px; border-radius: 8px; }
-</style>
-</head>
-<body>
-
-<!-- ===== Header ===== -->
-<header class="header">
-  <div class="header-inner">
-    <div class="header-left">
-      <div class="header-icon">📋</div>
-      <div>
-        <h1>热线看板</h1>
-        <p>业务更新 · 数据报告 · 每日跟进</p>
-      </div>
-    </div>
-    <div class="header-right">
-      <span class="sync-status" id="syncStatus">☁️ 本地</span>
-      <span class="header-date" id="headerDate"></span>
-      <button class="btn btn-outline btn-sm" onclick="requestAdmin()" id="adminToggleBtn">🔧 管理</button>
-    </div>
-  </div>
-</header>
-
-<!-- ===== Announcement Bar (top banner) ===== -->
-<div class="announcement-bar" id="announcementBar" onclick="openAnnouncementPopup(0)" style="display:none;">
-  <span id="announcementBarText"></span>
-  <button class="close-bar" onclick="event.stopPropagation(); dismissAnnouncementBar()">✕</button>
-</div>
-
-<!-- ===== Announcement Popup (for viewing) ===== -->
-<div class="announcement-popup" id="announcementPopup">
-  <div class="popup-card">
-    <button class="popup-close" onclick="closeAnnouncementPopup()">✕</button>
-    <div class="popup-icon" id="popupIcon">📢</div>
-    <h2 id="popupTitle">公告</h2>
-    <div class="popup-time" id="popupTime"></div>
-    <div class="popup-content" id="popupContent"></div>
-    <div style="display:flex;gap:8px;margin-top:16px;">
-      <button class="popup-btn" id="popupPrevBtn" onclick="prevAnnouncement()" style="flex:0 0 auto;width:auto;padding:10px 16px;background:var(--gray-200);color:var(--gray-700);">← 上一条</button>
-      <button class="popup-btn" id="popupNextBtn" onclick="nextAnnouncement()" style="flex:0 0 auto;width:auto;padding:10px 16px;background:var(--gray-200);color:var(--gray-700);">下一条 →</button>
-      <button class="popup-btn" id="popupCloseBtn" onclick="closeAnnouncementPopup()" style="flex:1;">我知道了</button>
-    </div>
-    <div style="text-align:center;font-size:12px;color:var(--gray-400);margin-top:8px;">
-      <span id="popupCounter"></span>
-    </div>
-  </div>
-</div>
-
-<!-- ===== Announcement Manager Modal (admin) ===== -->
-<div class="modal-overlay" id="announcementSettingsModal">
-  <div class="modal" style="max-width: 640px;">
-    <h2>📢 公告管理</h2>
-    <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;">可创建多条公告，支持设置显示频次和定时提醒。</p>
-
-    <!-- Add/Edit form -->
-    <div style="background:var(--gray-50);border-radius:8px;padding:16px;margin-bottom:16px;">
-      <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;" id="announceFormTitle">➕ 新增公告</h3>
-      <input type="hidden" id="editAnnounceIndex" value="-1">
-      <div class="form-row">
-        <div class="form-group">
-          <label>图标</label>
-          <select id="announceIcon">
-            <option value="📢">📢 公告</option>
-            <option value="🎉">🎉 庆祝</option>
-            <option value="⚠️">⚠️ 重要</option>
-            <option value="🚨">🚨 紧急</option>
-            <option value="📌">📌 通知</option>
-            <option value="💡">💡 提示</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>标题 *</label>
-          <input type="text" id="announceTitle" placeholder="公告标题">
-        </div>
-      </div>
-      <div class="form-group">
-        <label>内容 *</label>
-        <textarea id="announceContent" rows="3" placeholder="输入公告内容..."></textarea>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>显示频次</label>
-          <select id="announceFrequency">
-            <option value="always">每次都显示</option>
-            <option value="hourly">每小时提醒</option>
-            <option value="daily">每天一次</option>
-            <option value="weekly">每周一次</option>
-            <option value="once">只显示一次</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>过期日期</label>
-          <input type="date" id="announceExpire">
-        </div>
-      </div>
-      <div class="form-group" style="display:flex;align-items:center;gap:8px;">
-        <input type="checkbox" id="announceEnabled" style="width:auto;" checked>
-        <label for="announceEnabled" style="margin:0;">启用此公告</label>
-      </div>
-      <div class="error-msg" id="announceFormError"></div>
-      <div style="display:flex;gap:8px;margin-top:8px;">
-        <button class="btn btn-ghost btn-sm" onclick="cancelEditAnnounce()" id="cancelEditBtn" style="display:none;">取消编辑</button>
-        <button class="btn btn-success btn-sm" onclick="addOrUpdateAnnounce()">✅ 保存此公告</button>
-      </div>
-    </div>
-
-    <!-- Announcement list -->
-    <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">公告列表 <span id="announceCount" style="font-weight:400;color:var(--gray-400);font-size:12px;"></span></h3>
-    <div id="announceListContainer" style="max-height:300px;overflow-y:auto;">
-      <div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px;">暂无公告，请在上方添加</div>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn btn-danger btn-sm" onclick="clearAllAnnouncements()">清除全部</button>
-      <button class="btn btn-ghost" onclick="closeAnnouncementSettings()">关闭</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== Stats ===== -->
-<div class="stats-bar">
-  <div class="stats-inner">
-    <div class="stat-item"><div class="stat-number" id="statTotal">0</div><div class="stat-label">全部链接</div></div>
-    <div class="stat-item"><div class="stat-number" id="statToday">0</div><div class="stat-label">今日更新</div></div>
-    <div class="stat-item"><div class="stat-number" id="statTypes">0</div><div class="stat-label">分类数</div></div>
-    <div class="stat-item"><div class="stat-number" id="statDepts">0</div><div class="stat-label">涉及部门</div></div>
-  </div>
-</div>
-
-<!-- ===== Main ===== -->
 <div class="main">
-  <div id="adminBar" style="display:none; margin-bottom:16px;">
-    <div style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:var(--radius); padding:14px 18px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;">
-      <span style="font-size:14px; font-weight:500; color:var(--primary-dark);">🔧 管理链接 <span class="admin-badge">已认证</span></span>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-ghost btn-sm" onclick="openAnnouncementSettings()">📢 公告</button>
-        <button class="btn btn-ghost btn-sm" onclick="openCloudModal()">☁️ 云同步</button>
-        <button class="btn btn-ghost btn-sm" onclick="openChangePwdModal()">🔑 改密码</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportData()">📥 导出</button>
-        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('importFileInput').click()">📤 导入</button>
-        <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
-        <button class="btn btn-primary" onclick="openAddModal()" style="background:var(--primary);color:#fff;">＋ 新增链接</button>
-      </div>
-    </div>
-  </div>
+<div id="adminBar" style="display:none;margin-bottom:12px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:10px 14px;display:none;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;">
+<span style="font-size:13px;font-weight:500;color:var(--primary-dark)">🔧 管理已开启</span>
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<button class="btn btn-ghost btn-sm" onclick="openAnnounceMgr()">📢 公告</button>
+<button class="btn btn-ghost btn-sm" onclick="openSyncModal()">☁️ 同步</button>
+<button class="btn btn-ghost btn-sm" onclick="openPwdChange()">🔑 密码</button>
+<button class="btn btn-ghost btn-sm" onclick="exportData()">📥 导出</button>
+<button class="btn btn-ghost btn-sm" onclick="document.getElementById('importFile').click()">📤 导入</button>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+<button class="btn btn-primary btn-sm" onclick="openAddLink()" style="background:var(--primary);color:#fff">＋ 新增</button>
+</div></div>
 
-  <div class="nav-tabs" id="viewTabs">
-    <button class="nav-tab active" data-view="type" onclick="switchView('type')">📂 按类型</button>
-    <button class="nav-tab" data-view="dept" onclick="switchView('dept')">🏢 按部门</button>
-    <button class="nav-tab" data-view="date" onclick="switchView('date')">📅 按日期</button>
-    <button class="nav-tab" data-view="all" onclick="switchView('all')">📋 全部卡片</button>
-    <button class="nav-tab" data-view="log" onclick="switchView('log')">📋 更新记录</button>
-  </div>
-
-  <div class="toolbar">
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="searchInput" placeholder="搜索标题、描述、标签..." oninput="renderLinks()">
-    </div>
-    <div class="filter-group" id="dateRangeGroup" style="display:flex;gap:4px;">
-      <span class="filter-chip" onclick="setDateRange('all')" id="drAll" style="background:var(--primary);color:#fff;border-color:var(--primary);padding:6px 10px;font-size:12px;">全部</span>
-      <span class="filter-chip" onclick="setDateRange('today')" id="drToday" style="padding:6px 10px;font-size:12px;">📅 今天</span>
-      <span class="filter-chip" onclick="setDateRange('week')" id="drWeek" style="padding:6px 10px;font-size:12px;">📅 本周</span>
-      <span class="filter-chip" onclick="setDateRange('month')" id="drMonth" style="padding:6px 10px;font-size:12px;">📅 本月</span>
-    </div>
-    <div class="filter-group" id="filterGroup"></div>
-  </div>
-
-  <div id="linksContainer">
-    <div class="empty-state">
-      <div class="empty-icon">📭</div>
-      <p>暂无链接数据</p>
-    </div>
-  </div>
+<div class="nav-tabs">
+<button class="nav-tab active" onclick="switchView('type')">📂 按类型</button>
+<button class="nav-tab" onclick="switchView('dept')">🏢 按部门</button>
+<button class="nav-tab" onclick="switchView('date')">📅 按日期</button>
+<button class="nav-tab" onclick="switchView('all')">📋 全部</button>
+<button class="nav-tab" onclick="switchView('log')">📋 记录</button>
 </div>
 
-<!-- ===== Password Modal ===== -->
-<div class="modal-overlay" id="pwdModal">
-  <div class="modal modal-sm">
-    <div style="text-align:center;">
-      <div class="password-icon">🔒</div>
-      <h2 style="margin-bottom:6px;">管理员验证</h2>
-      <p style="font-size:13px;color:var(--gray-500);margin-bottom:20px;">请输入管理密码</p>
-    </div>
-    <div class="form-group">
-      <label>管理密码</label>
-      <input type="password" id="adminPwdInput" placeholder="请输入密码" onkeydown="if(event.key==='Enter')verifyPassword()">
-      <div class="error-msg" id="pwdError">密码错误，请重试</div>
-    </div>
-    <div class="modal-actions" style="justify-content:center;border:none;padding-top:0;">
-      <button class="btn btn-ghost" onclick="closePwdModal()">取消</button>
-      <button class="btn btn-primary" onclick="verifyPassword()" style="background:var(--primary);color:#fff;">确认</button>
-    </div>
-  </div>
+<div class="toolbar">
+<div class="search-box"><span class="search-icon">🔍</span><input id="searchInput" placeholder="搜索..." oninput="renderLinks()"></div>
+<div class="filter-group">
+<span class="filter-chip active" onclick="setDateFilter('all')" id="dfAll">全部</span>
+<span class="filter-chip" onclick="setDateFilter('today')" id="dfToday">📅 今天</span>
+<span class="filter-chip" onclick="setDateFilter('week')" id="dfWeek">📅 本周</span>
+<span class="filter-chip" onclick="setDateFilter('month')" id="dfMonth">📅 本月</span>
+<span class="filter-chip" onclick="setFilter('all')" id="catAll">🏷️ 全部</span>
+</div></div>
+
+<div id="linksContainer"><div class="empty-state"><div class="empty-icon">📭</div><p>暂无链接数据</p></div></div></div>
+
+<!-- Modals -->
+<div class="modal-overlay" id="syncModal"><div class="modal modal-sm">
+<h2>☁️ 云同步设置</h2>
+<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">配置后数据自动同步到 GitHub</p>
+<div class="form-group"><label>GitHub Token</label><input type="password" id="syncToken" placeholder="ghp_..."></div>
+<div class="error-msg" id="syncErr"></div><div class="success-msg" id="syncOk" style="display:none;color:var(--success);font-size:12px"></div>
+<div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('syncModal')">取消</button><button class="btn btn-outline" onclick="testSync()" style="border-color:var(--gray-300);color:var(--gray-600)">🔄 测试</button><button class="btn btn-success" onclick="saveSync()">💾 保存</button></div>
+</div></div>
+
+<div class="modal-overlay" id="pwdModal"><div class="modal modal-sm">
+<div style="text-align:center"><div style="font-size:36px;margin-bottom:8px">🔒</div><h2>管理员验证</h2><p style="font-size:12px;color:var(--gray-500);margin-bottom:16px">请输入管理密码</p></div>
+<div class="form-group"><input type="password" id="adminPwd" placeholder="密码" onkeydown="if(event.key==='Enter')verifyPwd()"></div>
+<div class="error-msg" id="pwdErr" style="display:none;color:var(--danger);font-size:12px;text-align:center">密码错误</div>
+<div class="modal-actions" style="justify-content:center;border:none;padding:0"><button class="btn btn-ghost" onclick="closeModal('pwdModal')">取消</button><button class="btn btn-primary" onclick="verifyPwd()" style="background:var(--primary);color:#fff">确认</button></div>
+</div></div>
+
+<div class="modal-overlay" id="pwdChangeModal"><div class="modal modal-sm">
+<h2>🔑 修改密码</h2>
+<div class="form-group"><label>当前密码</label><input type="password" id="oldPwd"></div>
+<div class="form-group"><label>新密码</label><input type="password" id="newPwd"></div>
+<div class="form-group"><label>确认新密码</label><input type="password" id="cfPwd"></div>
+<div class="error-msg" id="pwdChgErr"></div>
+<div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('pwdChangeModal')">取消</button><button class="btn btn-success" onclick="doChangePwd()">确认</button></div>
+</div></div>
+
+<div class="modal-overlay" id="linkModal"><div class="modal">
+<h2 id="linkModalTitle">新增链接</h2>
+<form onsubmit="saveLink(event)"><input type="hidden" id="editId">
+<div class="form-group"><label>标题 *</label><input id="fTitle" required></div>
+<div class="form-group"><label>链接地址</label><input id="fUrl" placeholder="没有链接可不填"></div>
+<div class="form-group"><label>描述</label><textarea id="fDesc" rows="2"></textarea></div>
+<div class="form-row"><div class="form-group"><label>类型</label><select id="fType"><option>日报</option><option>周报</option><option>公告</option><option>通知</option><option>项目文档</option><option>其他</option></select></div>
+<div class="form-group"><label>部门</label><select id="fDept"><option>全公司</option><option>销售部</option><option>技术部</option><option>运营部</option><option>人事行政</option><option>财务部</option><option>市场部</option><option>客服部</option><option>其他</option></select></div></div>
+<div class="form-group"><label>标签（逗号分隔）</label><input id="fTags" placeholder="重要,紧急"></div>
+<div class="form-group"><label>图片</label><div style="display:flex;gap:6px"><input id="fImgUrl" placeholder="图片URL" onchange="addImgUrl()" style="flex:1"><label class="btn btn-ghost btn-sm" style="border:1px dashed var(--gray-300);cursor:pointer">📤 上传<input type="file" accept="image/*" style="display:none" onchange="uploadImg(event)"></label><button type="button" class="btn btn-ghost btn-sm" onclick="addImgUrl()">＋</button></div>
+<div id="imgList" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;min-height:20px"><span style="font-size:11px;color:var(--gray-400)">暂无图片</span></div></div>
+<div class="form-group"><label>附件</label><div style="display:flex;gap:6px;align-items:center"><label class="btn btn-ghost btn-sm" style="border:1px dashed var(--gray-300);cursor:pointer">📎 选择文件<input type="file" id="fAttach" style="display:none" onchange="attachFile(event)"></label><span id="attachName" style="font-size:12px;color:var(--gray-400)">未选择</span><button type="button" class="btn btn-ghost btn-sm" onclick="clearAttach()" id="clearAttBtn" style="display:none">✕</button></div></div>
+<div class="form-row"><div class="form-group"><label>日期</label><input type="date" id="fDate"></div>
+<div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:2px"><label style="display:flex;align-items:center;gap:4px;margin:0"><input type="checkbox" id="fToday" style="width:auto"> 今日更新</label></div></div>
+<div class="modal-actions"><button type="button" class="btn btn-ghost" onclick="closeModal('linkModal')">取消</button><button type="submit" class="btn btn-success">保存</button></div></form>
+</div></div>
+
+<div class="modal-overlay" id="cardDetailModal"><div class="modal" style="max-width:480px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div id="cdTypeTag"></div><span onclick="closeCardDetail()" style="cursor:pointer;font-size:18px;color:var(--gray-400)">✕</span></div>
+<h2 id="cdTitle" style="font-size:17px;font-weight:700;margin-bottom:4px"></h2>
+<p id="cdDesc" style="font-size:13px;color:var(--gray-500);line-height:1.6;margin-bottom:10px"></p>
+<div id="cdImages" style="display:grid;gap:4px;margin-bottom:10px"></div>
+<div style="background:var(--gray-50);border-radius:8px;padding:12px;margin-bottom:10px">
+<div style="display:flex;margin-bottom:4px"><span style="font-size:12px;color:var(--gray-500);width:56px">部门</span><span id="cdDept" style="font-size:12px"></span></div>
+<div style="display:flex;margin-bottom:4px"><span style="font-size:12px;color:var(--gray-500);width:56px">日期</span><span id="cdDate" style="font-size:12px"></span></div>
+<div style="display:flex;margin-bottom:4px"><span style="font-size:12px;color:var(--gray-500);width:56px">标签</span><span id="cdTags" style="font-size:12px"></span></div>
+<div id="cdClicks" style="display:none;display:flex"><span style="font-size:12px;color:var(--gray-500);width:56px">点击</span><span id="cdClicksVal" style="font-size:12px"></span></div>
 </div>
+<div id="cdActions" style="display:flex;flex-direction:column;gap:6px"></div>
+<button onclick="closeCardDetail()" style="width:100%;margin-top:10px;padding:9px;border:1px solid var(--gray-200);border-radius:8px;background:#fff;color:var(--gray-600);font-size:13px;cursor:pointer">关闭</button>
+</div></div>
 
-<!-- ===== Card Detail Modal ===== -->
-<div class="modal-overlay" id="cardDetailModal">
-  <div class="modal" style="max-width:500px;padding:24px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div style="display:flex;align-items:center;gap:8px;" id="detailTypeTag"></div>
-      <span onclick="closeCardDetail()" style="cursor:pointer;font-size:20px;color:var(--gray-400);">✕</span>
-    </div>
-    <h2 id="detailTitle" style="font-size:18px;font-weight:700;margin-bottom:4px;"></h2>
-    <p id="detailDesc" style="font-size:14px;color:var(--gray-500);line-height:1.6;margin-bottom:12px;"></p>
-    <div id="detailImages" style="display:grid;gap:6px;margin-bottom:12px;"></div>
-    <div style="background:var(--gray-50);border-radius:8px;padding:14px;margin-bottom:12px;">
-      <div style="display:flex;margin-bottom:6px;"><span style="font-size:13px;color:var(--gray-500);width:60px;">部门</span><span id="detailDept" style="font-size:13px;"></span></div>
-      <div style="display:flex;margin-bottom:6px;"><span style="font-size:13px;color:var(--gray-500);width:60px;">日期</span><span id="detailDate" style="font-size:13px;"></span></div>
-      <div style="display:flex;margin-bottom:6px;"><span style="font-size:13px;color:var(--gray-500);width:60px;">标签</span><span id="detailTags" style="font-size:13px;"></span></div>
-      <div id="detailClicks" style="display:none;display:flex;"><span style="font-size:13px;color:var(--gray-500);width:60px;">点击</span><span id="detailClicksCount" style="font-size:13px;"></span></div>
-    </div>
-    <div id="detailActions" style="display:flex;flex-direction:column;gap:8px;"></div>
-    <button onclick="closeCardDetail()" style="width:100%;margin-top:8px;padding:10px;border:1px solid var(--gray-200);border-radius:8px;background:#fff;color:var(--gray-600);font-size:14px;cursor:pointer;">关闭</button>
-  </div>
+<div class="modal-overlay" id="announceModal"><div class="modal" style="max-width:560px">
+<h2>📢 公告管理</h2>
+<div style="background:var(--gray-50);border-radius:8px;padding:12px;margin-bottom:12px">
+<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px"><span id="amFormTitle" style="font-size:13px;font-weight:600">➕ 新增公告</span><span id="amCancelBtn" style="display:none;font-size:11px;color:var(--primary);cursor:pointer" onclick="cancelAnnEdit()">取消编辑</span></div>
+<input type="hidden" id="amEditIdx" value="-1">
+<div class="form-row"><div class="form-group"><select id="amIcon"><option>📢</option><option>🎉</option><option>⚠️</option><option>🚨</option><option>📌</option><option>💡</option></select></div>
+<div class="form-group"><input id="amTitle" placeholder="标题"></div></div>
+<div class="form-group"><textarea id="amContent" rows="2" placeholder="内容"></textarea></div>
+<div class="form-row"><div class="form-group"><select id="amFreq"><option value="always">每次都显示</option><option value="hourly">每小时提醒</option><option value="daily">每天一次</option><option value="weekly">每周一次</option><option value="once">只显示一次</option></select></div>
+<div class="form-group"><input type="date" id="amExpire"></div></div>
+<div style="display:flex;gap:6px;align-items:center"><label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" id="amEnabled" checked style="width:auto"> 启用</label>
+<button type="button" class="btn btn-success btn-sm" onclick="saveAnnounce()">保存</button></div>
+<div class="error-msg" id="amErr"></div></div>
+<div style="font-size:13px;font-weight:600;margin-bottom:6px">公告列表 <span id="amCount" style="font-weight:400;color:var(--gray-400)"></span></div>
+<div id="amList" style="max-height:200px;overflow-y:auto"></div>
+<div class="modal-actions"><button class="btn btn-ghost btn-sm" onclick="clearAllAnnounces()" style="color:var(--danger)">清空全部</button><button class="btn btn-ghost" onclick="closeModal('announceModal')">关闭</button></div>
+</div></div>
+
+<div class="lightbox-overlay" id="lightbox" onclick="closeLb()">
+<div style="display:flex;align-items:center;gap:10px"><button class="lightbox-nav" id="lbPrev" onclick="event.stopPropagation();lbPrev()">‹</button><img id="lbImg" src=""><button class="lightbox-nav" id="lbNext" onclick="event.stopPropagation();lbNext()">›</button></div>
+<span style="position:absolute;bottom:16px;background:rgba(0,0,0,.5);color:#fff;padding:3px 12px;border-radius:12px;font-size:12px" id="lbCounter"></span>
 </div>
-<!-- ===== Cloud Sync Modal ===== -->
-<div class="modal-overlay" id="cloudModal">
-  <div class="modal">
-    <h2>☁️ GitHub 云同步设置</h2>
-    <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px;">配置后，数据将自动同步到 GitHub 仓库，所有同事共享同一份数据。</p>
-
-    <div class="form-group">
-      <label>GitHub Token</label>
-      <input type="password" id="cloudApiKey" placeholder="输入 GitHub Personal Access Token">
-      <div class="hint">用之前创建的那个 ghp_ 开头的 Token 就行</div>
-    </div>
-
-    <div class="error-msg" id="cloudError"></div>
-    <div class="success-msg" id="cloudSuccess"></div>
-
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeCloudModal()">取消</button>
-      <button class="btn btn-outline" onclick="testCloudConnection()" style="border-color:var(--gray-300);color:var(--gray-600);">🔄 测试连接</button>
-      <button class="btn btn-success" onclick="saveCloudConfig()">💾 保存</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== Change Password Modal ===== -->
-<div class="modal-overlay" id="changePwdModal">
-  <div class="modal modal-sm">
-    <h2>🔑 修改管理密码</h2>
-    <div class="form-group">
-      <label>当前密码</label>
-      <input type="password" id="oldPwdInput" placeholder="输入当前密码">
-    </div>
-    <div class="form-group">
-      <label>新密码</label>
-      <input type="password" id="newPwdInput" placeholder="输入新密码（至少4位）">
-    </div>
-    <div class="form-group">
-      <label>确认新密码</label>
-      <input type="password" id="confirmPwdInput" placeholder="再次输入新密码">
-    </div>
-    <div class="error-msg" id="changePwdError">密码错误或两次输入不一致</div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeChangePwdModal()">取消</button>
-      <button class="btn btn-success" onclick="changePassword()">确认修改</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== Link Modal ===== -->
-<div class="modal-overlay" id="linkModal">
-  <div class="modal">
-    <h2 id="modalTitle">新增链接</h2>
-    <form id="linkForm" onsubmit="saveLink(event)">
-      <input type="hidden" id="editId">
-      <div class="form-group">
-        <label>标题 *</label>
-        <input type="text" id="inputTitle" placeholder="输入链接标题" required>
-      </div>
-      <div class="form-group">
-        <label>链接地址</label>
-        <input type="url" id="inputUrl" placeholder="https://...（没有链接可不填）">
-      </div>
-      <div class="form-group">
-        <label>简要描述</label>
-        <textarea id="inputDesc" placeholder="一句话描述这个更新的内容..."></textarea>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>类型 *</label>
-          <select id="inputType" required>
-            <option value="日报">📋 日报</option>
-            <option value="周报">📊 周报</option>
-            <option value="公告">📢 公告</option>
-            <option value="通知">📌 通知</option>
-            <option value="项目文档">📄 项目文档</option>
-            <option value="其他">📁 其他</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>所属部门 *</label>
-          <select id="inputDept" required>
-            <option value="全公司">🏢 全公司</option>
-            <option value="销售部">📞 销售部</option>
-            <option value="技术部">💻 技术部</option>
-            <option value="运营部">📈 运营部</option>
-            <option value="人事行政">👥 人事行政</option>
-            <option value="财务部">💰 财务部</option>
-            <option value="市场部">🎯 市场部</option>
-            <option value="客服部">🎧 客服部</option>
-            <option value="其他">📁 其他</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>标签（用逗号分隔）</label>
-        <input type="text" id="inputTags" placeholder="例如：重要, 紧急, 待办">
-      </div>
-      <div class="form-group">
-        <label>图片 / 截图</label>
-        <div class="img-upload-area" style="flex-wrap:wrap;">
-          <input type="text" id="inputImageUrl" placeholder="粘贴图片链接（URL）" oninput="previewImageFromUrl()" style="flex:1;min-width:140px;">
-          <label class="img-upload-btn">
-            📤 上传图片
-            <input type="file" id="inputImageFile" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
-          </label>
-          <button type="button" class="img-upload-btn" onclick="addImageToList()" style="border-color:var(--primary);color:var(--primary);white-space:nowrap;">＋ 确认添加</button>
-        </div>
-        <div style="font-size:12px;color:var(--gray-400);margin-top:4px;">支持多张图片，每张 ≤ 2MB</div>
-        <div id="imageListContainer" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
-      </div>
-      <!-- Attachment -->
-      <div class="form-group">
-        <label>附件（PDF / Word / Excel）</label>
-        <div class="img-upload-area">
-          <label class="img-upload-btn" style="border-style:solid;">
-            📎 选择附件
-            <input type="file" id="inputAttachment" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar" style="display:none" onchange="handleAttachmentUpload(event)">
-          </label>
-          <span style="font-size:12px;color:var(--gray-400);line-height:36px;">支持 PDF、Word、Excel 等，最大 10MB</span>
-        </div>
-        <div class="img-preview" id="attachmentPreview">
-          <span style="font-size:20px;" id="attachmentIcon">📎</span>
-          <span class="img-name" id="attachmentName">未选择文件</span>
-          <span class="img-remove" onclick="clearAttachment()">✕</span>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>更新日期</label>
-          <input type="date" id="inputDate">
-        </div>
-        <div class="form-group" style="display:flex;align-items:flex-end;gap:8px;padding-bottom:2px;">
-          <input type="checkbox" id="inputIsToday" style="width:auto;">
-          <label for="inputIsToday" style="margin:0;">标记为今日更新</label>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-ghost" onclick="closeLinkModal()">取消</button>
-        <button type="submit" class="btn btn-success">保存</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
-  <div style="position:relative;display:flex;align-items:center;gap:12px;">
-    <button id="lightboxPrev" onclick="event.stopPropagation();prevLightbox()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:28px;width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">‹</button>
-    <img id="lightboxImg" src="" alt="预览" style="max-width:80vw;max-height:85vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:lightboxIn 0.3s ease;">
-    <button id="lightboxNext" onclick="event.stopPropagation();nextLightbox()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:28px;width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">›</button>
-  </div>
-  <span id="lightboxCounter" style="position:absolute;bottom:20px;background:rgba(0,0,0,0.5);color:#fff;padding:4px 14px;border-radius:20px;font-size:13px;">1/1</span>
-</div>
-<div class="toast-container" id="toastContainer"></div>
+<div class="toast-container" id="toastC"></div>
 
 <script>
-// ===== Constants =====
-const STORAGE_KEY = 'loomy_biz_links_v2';
-const PWD_KEY = 'loomy_admin_pwd';
-const ADMIN_SESSION_KEY = 'loomy_admin_session';
-const CLOUD_CONFIG_KEY = 'loomy_cloud_config';
-const LOGS_KEY = 'loomy_change_logs';
-const DEFAULT_PWD = 'admin123';
+// ===== Data =====
+var links=[],admin=false,view='type',filter='all',dateFilter='all',cloudData=null;
+var pendingImgs=[],pendingAttach=null,lbImgs=[],lbIdx=0;
+var anns=[],annViewIdx=0;
+var STORAGE='loomy_biz_links_v2',PWD='loomy_admin_pwd',CLOUD_CFG='loomy_cloud_cfg',ANN_KEY='loomy_anns',LOGS_KEY='loomy_logs';
+var GH_U='liubohua8888888888',GH_R='hotline-board',GH_B='main',GH_D='data.json';
 
-let links = [];
-let currentView = 'type';
-let adminMode = false;
-let currentFilter = 'all';
-let pendingImages = []; // array of { src, name }
-let pendingAttachment = null; // { name, data (base64), size }
-let cloudConfig = null;
-
-const DEFAULT_LINKS = [
-  { id: Date.now() - 86400000 * 2, title: '5月27日销售数据日报', url: '#', description: '昨日各团队销售业绩及环比分析', type: '日报', department: '销售部', tags: ['销售数据', '业绩'], date: '2026-05-27', isToday: false, image: '' },
-  { id: Date.now() - 86400000, title: '本周技术研发周报', url: '#', description: '本周技术部各项目进展及下周计划', type: '周报', department: '技术部', tags: ['研发', '项目进展'], date: '2026-05-28', isToday: false, image: '' },
-  { id: Date.now(), title: '关于端午放假安排的通知', url: '#', description: '2026年端午节放假及相关工作安排', type: '通知', department: '全公司', tags: ['放假', '重要'], date: '2026-05-29', isToday: true, image: '' },
-  { id: Date.now() + 1, title: '5月运营数据看板', url: '#', description: '各渠道运营数据实时看板', type: '日报', department: '运营部', tags: ['运营数据', '看板'], date: '2026-05-29', isToday: true, image: '' },
-  { id: Date.now() + 2, title: 'Q2 产品路线图更新', url: '#', description: '二季度产品迭代计划及各模块排期', type: '项目文档', department: '技术部', tags: ['产品', '路线图'], date: '2026-05-29', isToday: true, image: '' },
-  { id: Date.now() + 3, title: '全员大会会议纪要', url: '#', description: '5月全员大会主要内容及决议事项', type: '公告', department: '全公司', tags: ['会议', '纪要'], date: '2026-05-28', isToday: false, image: '' },
-];
+function td(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function tw(){var d=new Date(),w=['日','一','二','三','四','五','六'];return td()+' 周'+w[d.getDay()]}
+function toast(m,t){var c=document.getElementById('toastC'),o=document.createElement('div');o.className='toast '+(t||'info');o.textContent=m;c.appendChild(o);setTimeout(function(){o.style.opacity='0';setTimeout(function(){o.remove()},300)},2500)}
+function closeModal(i){document.getElementById(i).classList.remove('show')}
+function openModal(i){document.getElementById(i).classList.add('show')}
 
 // ===== Password =====
-function getStoredPwd() {
-  const p = localStorage.getItem(PWD_KEY);
-  return p || btoa(DEFAULT_PWD);
+function gp(){var p=localStorage.getItem(PWD);return p||btoa('admin123')}
+function cp(i){return btoa(i)===gp()}
+function toggleAdmin(){
+  if(admin){admin=false;document.getElementById('adminBar').style.display='none';renderLinks();return}
+  document.getElementById('adminPwd').value='';document.getElementById('pwdErr').style.display='none';openModal('pwdModal')
 }
-function setStoredPwd(plain) { localStorage.setItem(PWD_KEY, btoa(plain)); }
-function checkPwd(input) { return btoa(input) === getStoredPwd(); }
-function checkAdminSession() { return sessionStorage.getItem(ADMIN_SESSION_KEY) === '1'; }
-function setAdminSession() { sessionStorage.setItem(ADMIN_SESSION_KEY, '1'); }
-function clearAdminSession() { sessionStorage.removeItem(ADMIN_SESSION_KEY); }
+function verifyPwd(){if(cp(document.getElementById('adminPwd').value)){admin=true;document.getElementById('adminBar').style.display='flex';closeModal('pwdModal');renderLinks();toast('已进入管理','success')}else{document.getElementById('pwdErr').style.display='block'}}
+function openPwdChange(){document.getElementById('oldPwd').value='';document.getElementById('newPwd').value='';document.getElementById('cfPwd').value='';document.getElementById('pwdChgErr').style.display='none';openModal('pwdChangeModal')}
+function doChangePwd(){
+  var o=document.getElementById('oldPwd').value,n=document.getElementById('newPwd').value,c=document.getElementById('cfPwd').value;
+  if(!cp(o)){document.getElementById('pwdChgErr').textContent='当前密码错误';document.getElementById('pwdChgErr').style.display='block';return}
+  if(n.length<4){document.getElementById('pwdChgErr').textContent='至少4位';document.getElementById('pwdChgErr').style.display='block';return}
+  if(n!==c){document.getElementById('pwdChgErr').textContent='两次不一致';document.getElementById('pwdChgErr').style.display='block';return}
+  localStorage.setItem(PWD,btoa(n));closeModal('pwdChangeModal');toast('密码已修改','success')
+}
 
+// ===== Cloud Sync =====
+function loadCloud(){var s=localStorage.getItem(CLOUD_CFG);if(s){try{cloudData=JSON.parse(s)}catch(e){cloudData=null}}return cloudData}
+function saveCloud(){localStorage.setItem(CLOUD_CFG,JSON.stringify(cloudData))}
+function upSync(){var e=document.getElementById('syncStatus');if(cloudData&&cloudData.t){e.textContent='☁️ 已同步';e.className='sync-status online'}else{e.textContent='☁️ 本地';e.className='sync-status'}}
+function openSyncModal(){loadCloud();document.getElementById('syncToken').value=cloudData&&cloudData.t?cloudData.t:'';document.getElementById('syncErr').style.display='none';document.getElementById('syncOk').style.display='none';openModal('syncModal')}
+function testSync(){
+  var t=document.getElementById('syncToken').value.trim();
+  if(!t){document.getElementById('syncErr').textContent='请输入Token';document.getElementById('syncErr').style.display='block';return}
+  var x=new XMLHttpRequest();x.open('GET','https://api.github.com/user');x.setRequestHeader('Authorization','token '+t);x.onload=function(){
+    if(x.status===200){var u=JSON.parse(x.responseText);document.getElementById('syncOk').textContent='✅ 连接成功，用户：'+u.login;document.getElementById('syncOk').style.display='block';document.getElementById('syncErr').style.display='none'}
+    else{document.getElementById('syncErr').textContent='❌ Token无效';document.getElementById('syncErr').style.display='block';document.getElementById('syncOk').style.display='none'}
+  };x.onerror=function(){document.getElementById('syncErr').textContent='❌ 网络错误';document.getElementById('syncErr').style.display='block'};x.send()
+}
+function saveSync(){
+  var t=document.getElementById('syncToken').value.trim();
+  if(!t){document.getElementById('syncErr').textContent='请输入Token';document.getElementById('syncErr').style.display='block';return}
+  cloudData={t:t};saveCloud();upSync();closeModal('syncModal');toast('☁️ 已保存','success')
+  setTimeout(function(){sync2cloud()},500)
+}
+function getFileSHA(t,cb){
+  var x=new XMLHttpRequest();x.open('GET','https://api.github.com/repos/'+GH_U+'/'+GH_R+'/contents/'+GH_D);x.setRequestHeader('Authorization','token '+t);
+  x.onload=function(){if(x.status===200)cb(JSON.parse(x.responseText).sha);else cb(null)};x.onerror=function(){cb(null)};x.send()
+}
+function sync2cloud(){
+  if(!cloudData||!cloudData.t)return;
+  var t=cloudData.t,c=window.btoa(unescape(encodeURIComponent(JSON.stringify(links,null,2))));
+  getFileSHA(t,function(sha){
+    var b={message:'更新看板数据',content:c,branch:GH_B};if(sha)b.sha=sha;
+    var x=new XMLHttpRequest();x.open('PUT','https://api.github.com/repos/'+GH_U+'/'+GH_R+'/contents/'+GH_D);
+    x.setRequestHeader('Authorization','token '+t);x.setRequestHeader('Content-Type','application/json');
+    x.onload=function(){if(x.status<300)toast('☁️ 已同步','success');else toast('❌ 同步失败','error')};
+    x.onerror=function(){toast('❌ 同步失败','error')};x.send(JSON.stringify(b))
+  })
+}
 
+// ===== Data Load =====
+function loadData(){
+  var s=localStorage.getItem(STORAGE);
+  if(s){try{links=JSON.parse(s)}catch(e){links=[]}}else{links=[];localStorage.setItem(STORAGE,'[]')}
+}
+function saveData(){localStorage.setItem(STORAGE,JSON.stringify(links))}
 
-// ===== Card Detail Popup =====
-function showCardDetail(id) {
-  var l = null;
-  for (var i = 0; i < links.length; i++) { if (links[i].id == id) { l = links[i]; break; } }
-  if (!l) return;
-  document.getElementById('detailTitle').innerHTML = l.title;
-  document.getElementById('detailDesc').innerHTML = l.description || '';
-  document.getElementById('detailDesc').style.display = l.description ? '' : 'none';
-  document.getElementById('detailDept').innerHTML = l.department;
-  document.getElementById('detailDate').innerHTML = l.date;
-  document.getElementById('detailTags').innerHTML = (l.tags || []).join('、') || '无';
-  var th = '<span class="type-tag type-' + l.type + '">' + l.type + '</span>';
-  if (l.isToday) th += '<span style="font-size:11px;background:#4f6ef7;color:#fff;padding:2px 10px;border-radius:10px;margin-left:6px;">🆕 今日</span>';
-  document.getElementById('detailTypeTag').innerHTML = th;
-  if (l.clicks) { document.getElementById('detailClicks').style.display = 'flex'; document.getElementById('detailClicksCount').innerHTML = '👁 ' + l.clicks + ' 次'; }
-  else { document.getElementById('detailClicks').style.display = 'none'; }
-  var ic = document.getElementById('detailImages'); ic.innerHTML = '';
-  var imgs = (l.images && l.images.length) ? l.images : (l.image ? [{ src: l.image }] : []);
-  if (imgs.length) {
-    ic.style.display = 'grid'; ic.style.gridTemplateColumns = 'repeat(' + Math.min(imgs.length,3) + ',1fr)';
-    for (var j = 0; j < imgs.length; j++) {
-      var s = imgs[j].src || imgs[j];
-      var d = document.createElement('div'); d.style.cssText = 'aspect-ratio:1;border-radius:6px;overflow:hidden;cursor:pointer;background:var(--gray-100);';
-      d.onclick = (function(src) { return function() { closeCardDetail(); setTimeout(function(){ openLightbox([src],0); },150); }; })(s);
-      var e = document.createElement('img'); e.src = s; e.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-      e.onerror = function() { this.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;">❌</div>'; };
-      d.appendChild(e); ic.appendChild(d);
+function loadFromCloud(){
+  return new Promise(function(resolve){
+    var urls=[
+      'https://raw.githubusercontent.com/'+GH_U+'/'+GH_R+'/'+GH_B+'/'+GH_D,
+      'https://api.github.com/repos/'+GH_U+'/'+GH_R+'/contents/'+GH_D,
+      './'+GH_D
+    ];
+    function tryOne(i){
+      if(i>=urls.length){resolve(false);return}
+      var u=urls[i],x=new XMLHttpRequest();x.open('GET',u);
+      if(u.indexOf('api.github')>-1)x.setRequestHeader('Accept','application/vnd.github.v3+json');
+      x.onload=function(){
+        if(x.status===200){
+          try{
+            var d;if(u.indexOf('api.github')>-1){var r=JSON.parse(x.responseText);d=JSON.parse(decodeURIComponent(escape(atob(r.content))))}
+            else d=JSON.parse(x.responseText);
+            if(Array.isArray(d)&&d.length){links=d;saveData();renderLinks();resolve(true);return}
+          }catch(e){}
+        }
+        tryOne(i+1)
+      };
+      x.onerror=function(){tryOne(i+1)};x.send()
     }
-  } else { ic.style.display = 'none'; }
-  var ac = document.getElementById('detailActions'); ac.innerHTML = '';
-  if (l.url && l.url !== '#') {
-    var a = document.createElement('a'); a.href = l.url; a.target = '_blank'; a.rel = 'noopener';
-    a.innerHTML = '🔗 打开链接'; a.style.cssText = 'display:block;text-align:center;background:#4f6ef7;color:#fff;padding:10px;border-radius:8px;text-decoration:none;font-size:14px;';
-    ac.appendChild(a);
-  }
-  if (l.attachment && l.attachment.data) {
-    var b = document.createElement('a'); b.href = l.attachment.data; b.download = l.attachment.name;
-    b.innerHTML = '📎 下载附件：' + l.attachment.name; b.style.cssText = 'display:block;text-align:center;background:#22c55e;color:#fff;padding:10px;border-radius:8px;text-decoration:none;font-size:14px;';
-    ac.appendChild(b);
-  }
-  document.getElementById('cardDetailModal').classList.add('show');
-}
-function closeCardDetail() {
-  document.getElementById('cardDetailModal').classList.remove('show');
-}
-// ===== GitHub Sync =====
-const GH_OWNER = 'liubohua8888888888';
-const GH_REPO = 'hotline-board';
-const GH_BRANCH = 'main';
-const GH_DATA_FILE = 'data.json';
-
-function loadCloudConfig() {
-  const stored = localStorage.getItem(CLOUD_CONFIG_KEY);
-  if (stored) {
-    try { cloudConfig = JSON.parse(stored); } catch(e) { cloudConfig = null; }
-  }
-  // Auto-initialize token if not configured
-  if (!cloudConfig || !cloudConfig.token) {
-    const part1 = 'ghp_';
-    const part2 = 'qqtJ0rBICDxw8iBvfNBicn3FSzvwHL0gEMO9';
-    cloudConfig = { token: part1 + part2, binId: '' };
-    saveCloudConfigToLocal();
-  }
-  return cloudConfig;
+    tryOne(0)
+  })
 }
 
-function saveCloudConfigToLocal() {
-  localStorage.setItem(CLOUD_CONFIG_KEY, JSON.stringify(cloudConfig));
+// ===== Init =====
+function init(){
+  loadCloud();upSync();document.getElementById('headerDate').textContent=tw();
+  loadFromCloud().then(function(ok){if(!ok)loadData();renderLinks()});
+  setupLightbox();
+  var c=setInterval(function(){
+    if(typeof showAnns==='function'){showAnns();clearInterval(c)}
+  },200)
 }
 
-function updateSyncStatus() {
-  const el = document.getElementById('syncStatus');
-  if (cloudConfig && cloudConfig.token) {
-    el.className = 'sync-status online';
-    el.textContent = '☁️ 已同步';
-  } else {
-    el.className = 'sync-status';
-    el.textContent = '☁️ 本地';
+// ===== Lightbox =====
+function setupLightbox(){
+  document.getElementById('lightbox').addEventListener('click',function(e){if(e.target===this)closeLb()});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeLb();if(e.key==='ArrowLeft')lbPrev();if(e.key==='ArrowRight')lbNext()})
+}
+function openLb(imgs,i){
+  lbImgs=imgs;lbIdx=i||0;showLb();openModal('lightbox')
+}
+function showLb(){
+  document.getElementById('lbImg').src=lbImgs[lbIdx];document.getElementById('lbCounter').textContent=(lbIdx+1)+'/'+lbImgs.length;
+  document.getElementById('lbPrev').style.display=lbIdx>0?'':'none';document.getElementById('lbNext').style.display=lbIdx<lbImgs.length-1?'':'none'
+}
+function lbPrev(){if(lbIdx>0){lbIdx--;showLb()}}
+function lbNext(){if(lbIdx<lbImgs.length-1){lbIdx++;showLb()}}
+function closeLb(){closeModal('lightbox')}
+
+// ===== View =====
+function switchView(v){view=v;document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active')});var el=document.querySelector('.nav-tab[onclick="switchView(\\''+v+'\\')"]');if(el)el.classList.add('active');renderLinks()}
+function setFilter(f){filter=f;renderLinks()}
+function setDateFilter(d){dateFilter=d;['dfAll','dfToday','dfWeek','dfMonth'].forEach(function(id){var e=document.getElementById(id);if(e)e.className='filter-chip'+(id==='df'+d.charAt(0).toUpperCase()+d.slice(1)?' active':'')});renderLinks()}
+
+// ===== Render =====
+function renderLinks(){
+  var q=(document.getElementById('searchInput').value||'').toLowerCase().trim(),c=document.getElementById('linksContainer');
+  if(view==='log'){showLogs();return}
+  var arr=[];for(var i=0;i<links.length;i++)arr.push(links[i]);
+  if(q)arr=arr.filter(function(l){return(l.title||'').toLowerCase().includes(q)||(l.description||'').toLowerCase().includes(q)||(l.tags||[]).some(function(t){return t.toLowerCase().includes(q)})});
+  if(filter!=='all')arr=arr.filter(function(l){return l.type===filter||l.department===filter});
+  if(dateFilter!=='all'){
+    var now=new Date(),today=td();
+    arr=arr.filter(function(l){
+      var d=l.date||'';if(dateFilter==='today')return d===today;
+      if(dateFilter==='week'){var w=new Date(d),ws=new Date(now);ws.setDate(now.getDate()-now.getDay());return w>=ws}
+      if(dateFilter==='month'){var m=new Date(d);return m.getMonth()===now.getMonth()&&m.getFullYear()===now.getFullYear()}
+      return true
+    })
   }
+  arr.sort(function(a,b){if(a.isToday!==b.isToday)return a.isToday?-1:1;return(b.date||'').localeCompare(a.date||'')});
+  document.getElementById('statTotal').textContent=links.length;
+  document.getElementById('statToday').textContent=links.filter(function(l){return l.isToday}).length;
+  var ts={},ds={};links.forEach(function(l){ts[l.type]=1;ds[l.department]=1});
+  document.getElementById('statTypes').textContent=Object.keys(ts).length;
+  document.getElementById('statDepts').textContent=Object.keys(ds).length;
+  renderChips(arr);
+  if(!arr.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div><p>没有匹配的内容</p></div>';return}
+  if(view==='all'){c.innerHTML='<div class="links-grid">'+arr.map(function(l){return card(l)}).join('')+'</div>';return}
+  var groups={};
+  arr.forEach(function(l){var g=view==='type'?l.type:view==='dept'?l.department:l.date;if(!groups[g])groups[g]=[];groups[g].push(l)});
+  var entries=Object.entries(groups);
+  if(view==='type'){var ord=['日报','周报','公告','通知','项目文档','其他'];entries.sort(function(a,b){var ai=ord.indexOf(a[0]),bi=ord.indexOf(b[0]);return(ai<0?99:ai)-(bi<0?99:bi)})}
+  else if(view==='date')entries.sort(function(a,b){return b[0].localeCompare(a[0])})
+  else entries.sort(function(a,b){return b[1].length-a[1].length});
+  var h='';entries.forEach(function(e){
+    var g=e[0],items=e[1],icon=view==='type'?(function(t){var m={日报:'📋',周报:'📊',公告:'📢',通知:'📌',项目文档:'📄',其他:'📁'};return m[t]||'📁'})(g):view==='dept'?'🏢':'📅';
+    h+='<div class="group-section"><div class="section-title">'+icon+' '+g+' <span class="count">('+items.length+')</span></div><div class="links-grid">'+items.map(function(l){return card(l)}).join('')+'</div></div>'
+  });c.innerHTML=h
 }
 
-async function getGitHubFileSHA(token) {
-  try {
-    const resp = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_FILE}`, {
-      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
-    });
-    if (resp.ok) {
-      const data = await resp.json();
-      return data.sha;
+function renderChips(arr){
+  var ts={},ds={};links.forEach(function(l){ts[l.type]=1;ds[l.department]=1});
+  var all=Object.keys(ts).concat(Object.keys(ds));
+  var h='<span class="filter-chip'+(filter==='all'?' active':'')+'" onclick="setFilter(\'all\')">🏷️ 全部</span>';
+  all.forEach(function(f){h+='<span class="filter-chip'+(filter===f?' active':'')+'" onclick="setFilter(\''+f+'\')">'+f+'</span>'});
+  document.getElementById('catAll').outerHTML=h
+}
+
+function card(l){
+  var t=l.isToday||l.date===td(),tc=t?'today':'',tb=t?'<span class="today-badge">🆕 今日</span>':'';
+  var lu=l.url&&l.url!=='#'?l.url:'#',ie=lu!=='#';
+  var tg=(l.tags||[]).map(function(t){return'<span class="mini-tag">'+t+'</span>'}).join('');
+  var ih='';
+  if(l.images&&l.images.length){
+    var ims=l.images,cols=Math.min(ims.length,3);
+    ih='<div class="card-images" style="grid-template-columns:repeat('+cols+',1fr);aspect-ratio:'+(ims.length>1?'1':'16/9')+'">';
+    for(var i=0;i<ims.length;i++){var s=ims[i].src||ims[i];ih+='<div onclick="event.stopPropagation();openLb([\\''+s.replace(/'/g,"\\\\'")+'\\'],0)" style="cursor:pointer"><img src="'+s+'" onerror="this.parentElement.innerHTML=\\'<div style=\\\\\\"height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--gray-100)\\\\\\">❌</div>\\'"></div>'}
+    ih+='</div>'
+  }
+  var ah='';
+  if(l.attachment&&l.attachment.data)ah='<div style="margin-top:6px;padding:6px 8px;background:var(--gray-50);border-radius:4px;display:flex;align-items:center;gap:6px;font-size:11px"><span>📎</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gray-600)">'+l.attachment.name+'</span></div>';
+  var aa=admin?'<div style="display:flex;gap:4px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editLink('+l.id+')">✏️</button><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delLink('+l.id+')">🗑️</button></div>':'';
+  return '<div class="link-card '+tc+'" onclick="showDetail('+l.id+')">'+tb+'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><span class="type-tag type-'+l.type+'">'+l.type+'</span>'+aa+'</div><h3>'+l.title+'</h3>'+(l.description?'<p class="desc">'+l.description+'</p>':'')+ih+ah+'<div class="meta"><span class="dept-tag">🏢 '+l.department+'</span><span>📅 '+l.date+'</span>'+(admin?'<span>👁️ '+(l.clicks||0)+'</span>':'')+'</div>'+(tg?'<div class="tag-list">'+tg+'</div>':'')+'<div class="link-card-actions">'+(ie?'<a href="'+lu+'" target="_blank" rel="noopener" class="btn btn-primary btn-sm" onclick="event.stopPropagation();trackClick('+l.id+')">🔗 打开</a>':'<span style="font-size:11px;color:var(--gray-400);padding:4px 0">📄 文本</span>')+'<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();copyLink(\\''+encodeURIComponent(lu)+'\\',\\''+(l.title||'').replace(/'/g,"\\\\'")+'\\')">📋 复制</button></div></div>'
+}
+
+// ===== Card Detail =====
+function showDetail(id){
+  var l=null;for(var i=0;i<links.length;i++){if(links[i].id==id){l=links[i];break}}if(!l)return;
+  document.getElementById('cdTitle').textContent=l.title;
+  document.getElementById('cdDesc').textContent=l.description||'';document.getElementById('cdDesc').style.display=l.description?'':'none';
+  document.getElementById('cdDept').textContent=l.department;document.getElementById('cdDate').textContent=l.date;
+  document.getElementById('cdTags').textContent=(l.tags||[]).join('、')||'无';
+  var th='<span class="type-tag type-'+l.type+'">'+l.type+'</span>';if(l.isToday)th+='<span style="font-size:10px;background:#4f6ef7;color:#fff;padding:1px 8px;border-radius:8px;margin-left:4px">🆕 今日</span>';
+  document.getElementById('cdTypeTag').innerHTML=th;
+  if(l.clcks){document.getElementById('cdClicks').style.display='flex';document.getElementById('cdClicksVal').textContent='👁 '+l.clicks+' 次'}
+  else document.getElementById('cdClicks').style.display='none';
+  var ic=document.getElementById('cdImages');ic.innerHTML='';
+  var ims=(l.images&&l.images.length)?l.images:(l.image?[{src:l.image}]:[]);
+  if(ims.length){
+    ic.style.display='grid';ic.style.gridTemplateColumns='repeat('+Math.min(ims.length,3)+',1fr)';
+    for(var j=0;j<ims.length;j++){
+      var s=ims[j].src||ims[j],d=document.createElement('div');d.style.cssText='aspect-ratio:1;border-radius:4px;overflow:hidden;cursor:pointer;background:var(--gray-100)';
+      (function(src){d.onclick=function(){closeCardDetail();setTimeout(function(){openLb([src],0)},200)}})(s);
+      var e=document.createElement('img');e.src=s;e.style.cssText='width:100%;height:100%;object-fit:cover';
+      e.onerror=function(){this.parentElement.innerHTML='<div style="height:100%;display:flex;align-items:center;justify-content:center;font-size:20px">❌</div>'};
+      d.appendChild(e);ic.appendChild(d)
     }
-    return null; // File doesn't exist yet
-  } catch(e) {
-    return null;
-  }
+  }else ic.style.display='none';
+  var ac=document.getElementById('cdActions');ac.innerHTML='';
+  if(l.url&&l.url!=='#'){var a=document.createElement('a');a.href=l.url;a.target='_blank';a.rel='noopener';a.textContent='🔗 打开链接';a.style.cssText='display:block;text-align:center;background:#4f6ef7;color:#fff;padding:9px;border-radius:8px;text-decoration:none;font-size:13px';ac.appendChild(a)}
+  if(l.attachment&&l.attachment.data){var b=document.createElement('a');b.href=l.attachment.data;b.download=l.attachment.name;b.textContent='📎 下载：'+l.attachment.name;b.style.cssText='display:block;text-align:center;background:#22c55e;color:#fff;padding:9px;border-radius:8px;text-decoration:none;font-size:13px';ac.appendChild(b)}
+  openModal('cardDetailModal')
+}
+function closeCardDetail(){closeModal('cardDetailModal')}
+function trackClick(id){for(var i=0;i<links.length;i++){if(links[i].id==id){if(!links[i].clicks)links[i].clicks=0;links[i].clicks++;saveData();break}}}
+function copyLink(u,t){var d=decodeURIComponent(u);if(d==='#'){toast('没有链接可复制','info');return}navigator.clipboard.writeText(d).then(function(){toast('已复制: '+t,'success')}).catch(function(){toast('复制失败','error')})}
+
+// ===== CRUD =====
+function openAddLink(){
+  document.getElementById('linkModalTitle').textContent='新增链接';document.getElementById('editId').value='';
+  document.getElementById('fTitle').value='';document.getElementById('fUrl').value='';document.getElementById('fDesc').value='';
+  document.getElementById('fType').value='日报';document.getElementById('fDept').value='全公司';document.getElementById('fTags').value='';
+  document.getElementById('fDate').value=td();document.getElementById('fToday').checked=true;
+  pendingImgs=[];pendingAttach=null;document.getElementById('imgList').innerHTML='<span style="font-size:11px;color:var(--gray-400)">暂无图片</span>';
+  document.getElementById('attachName').textContent='未选择';document.getElementById('clearAttBtn').style.display='none';
+  openModal('linkModal')
+}
+function editLink(id){
+  var l=null;for(var i=0;i<links.length;i++){if(links[i].id==id){l=links[i];break}}if(!l)return;
+  document.getElementById('linkModalTitle').textContent='编辑链接';document.getElementById('editId').value=l.id;
+  document.getElementById('fTitle').value=l.title||'';document.getElementById('fUrl').value=l.url||'';
+  document.getElementById('fDesc').value=l.description||'';document.getElementById('fType').value=l.type||'日报';
+  document.getElementById('fDept').value=l.department||'全公司';document.getElementById('fTags').value=(l.tags||[]).join(', ');
+  document.getElementById('fDate').value=l.date||td();document.getElementById('fToday').checked=l.isToday||false;
+  if(l.images&&l.images.length){pendingImgs=l.images.map(function(x){return{src:x.src||x,name:x.name||''}})}else if(l.image){pendingImgs=[{src:l.image,name:''}]}else pendingImgs=[];
+  renderImgs();
+  if(l.attachment&&l.attachment.data){pendingAttach=l.attachment;document.getElementById('attachName').textContent=l.attachment.name;document.getElementById('clearAttBtn').style.display=''}
+  else{pendingAttach=null;document.getElementById('attachName').textContent='未选择';document.getElementById('clearAttBtn').style.display='none'}
+  openModal('linkModal')
+}
+function saveLink(e){
+  e.preventDefault();var eid=document.getElementById('editId').value;
+  var d={title:document.getElementById('fTitle').value.trim(),url:document.getElementById('fUrl').value.trim()||'#',description:document.getElementById('fDesc').value.trim(),type:document.getElementById('fType').value,department:document.getElementById('fDept').value,
+    tags:document.getElementById('fTags').value.split(/[,，]/).map(function(s){return s.trim()}).filter(Boolean),date:document.getElementById('fDate').value,isToday:document.getElementById('fToday').checked,
+    images:pendingImgs.length?pendingImgs.map(function(i){return{src:i.src,name:i.name}}):[],attachment:pendingAttach};
+  if(eid){for(var i=0;i<links.length;i++){if(links[i].id==eid){links[i]=Object.assign(links[i],d);break}}toast('已更新','success');addLog('edit',d)}
+  else{d.id=Date.now()+Math.random();links.unshift(d);toast('已添加','success');addLog('add',d)}
+  saveData();closeModal('linkModal');renderLinks();sync2cloud()
+}
+function delLink(id){
+  if(!confirm('确定删除？'))return;var item=null;
+  for(var i=0;i<links.length;i++){if(links[i].id==id){item=links[i];links.splice(i,1);break}}
+  saveData();renderLinks();if(item)addLog('delete',item);toast('已删除','info');sync2cloud()
 }
 
-async function syncToCloud() {
-  if (!cloudConfig || !cloudConfig.token) return;
-  const token = cloudConfig.token;
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(links, null, 2))));
-  const sha = await getGitHubFileSHA(token);
+// ===== Images =====
+function addImgUrl(){var u=document.getElementById('fImgUrl').value.trim();if(u){pendingImgs.push({src:u,name:''});document.getElementById('fImgUrl').value='';renderImgs()}}
+function uploadImg(e){var f=e.target.files[0];if(!f||f.size>2*1024*1024){toast('图片太大','error');return}
+  var r=new FileReader();r.onload=function(ev){pendingImgs.push({src:ev.target.result,name:f.name});renderImgs()};r.readAsDataURL(f)
+}
+function renderImgs(){
+  var c=document.getElementById('imgList');
+  if(!pendingImgs.length){c.innerHTML='<span style="font-size:11px;color:var(--gray-400)">暂无图片</span>';return}
+  c.innerHTML=pendingImgs.map(function(img,i){return'<div style="position:relative;width:60px;height:60px;border-radius:4px;overflow:hidden;border:1px solid var(--gray-200)"><img src="'+img.src+'" style="width:100%;height:100%;object-fit:cover"><span onclick="removeImg('+i+')" style="position:absolute;top:1px;right:1px;width:16px;height:16px;background:rgba(0,0,0,.4);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer">✕</span></div>'}).join('')
+}
+function removeImg(i){pendingImgs.splice(i,1);renderImgs()}
 
-  const body = {
-    message: '更新热线看板数据',
-    content: content,
-    branch: GH_BRANCH,
-  };
-  if (sha) body.sha = sha;
+// ===== Attachment =====
+function attachFile(e){var f=e.target.files[0];if(!f||f.size>10*1024*1024){toast('附件太大','error');return}
+  var r=new FileReader();r.onload=function(ev){pendingAttach={name:f.name,data:ev.target.result,size:f.size,type:f.name.split('.').pop().toLowerCase()};document.getElementById('attachName').textContent=f.name;document.getElementById('clearAttBtn').style.display=''};r.readAsDataURL(f)
+}
+function clearAttach(){pendingAttach=null;document.getElementById('attachName').textContent='未选择';document.getElementById('clearAttBtn').style.display='none'}
 
-  try {
-    const resp = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_FILE}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `token ${token}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-    if (!resp.ok) throw new Error('同步失败');
-    showToast('☁️ 数据已同步到 GitHub', 'success');
-  } catch(e) {
-    showToast('❌ 同步失败：' + e.message, 'error');
-  }
+// ===== Export / Import =====
+function exportData(){
+  try{var b=new Blob([JSON.stringify(links,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='hotline_'+td()+'.json';a.click();URL.revokeObjectURL(u);toast('已导出','success')}catch(e){toast('导出失败','error')}
+}
+function importData(e){
+  var f=e.target.files[0];if(!f)return;var r=new FileReader();
+  r.onload=function(ev){try{var d=JSON.parse(ev.target.result);if(!Array.isArray(d))throw new Error('格式错误');d.forEach(function(i){if(!i.title)throw new Error('缺少标题')});if(!confirm('导入 '+d.length+' 条数据？将覆盖当前数据'))return;links=d;saveData();renderLinks();toast('已导入 '+d.length+' 条','success')}catch(err){toast('导入失败: '+err.message,'error')}};
+  r.readAsText(f);e.target.value=''
 }
 
-async function loadFromCloud() {
-  var urls = [
-    './data.json',
-    '/hotline-board/data.json',
-    'https://raw.githubusercontent.com/liubohua8888888888/hotline-board/main/data.json',
-    'https://api.github.com/repos/liubohua8888888888/hotline-board/contents/data.json'
-  ];
-  function tryUrl(idx) {
-    if (idx >= urls.length) return Promise.resolve(false);
-    var url = urls[idx];
-    var opts = { cache: 'no-cache' };
-    if (url.includes('api.github.com')) {
-      opts.headers = { 'Accept': 'application/vnd.github.v3+json' };
-    }
-    return fetch(url, opts).then(function(r) {
-      if (!r.ok) throw new Error('fail');
-      if (url.includes('api.github.com')) {
-        return r.json().then(function(d) {
-          var dec = decodeURIComponent(escape(atob(d.content)));
-          var items = JSON.parse(dec);
-          if (Array.isArray(items) && items.length) { links = items; saveData(); renderLinks(); return true; }
-          return false;
-        });
-      }
-      return r.json().then(function(items) {
-        if (Array.isArray(items) && items.length) { links = items; saveData(); renderLinks(); return true; }
-        return false;
-      });
-    }).catch(function() {
-      return tryUrl(idx + 1);
-    });
-  }
-  return tryUrl(0);
+// ===== Change Log =====
+function getLogs(){try{return JSON.parse(localStorage.getItem(LOGS_KEY))||[]}catch(e){return[]}}
+function saveLogs(l){localStorage.setItem(LOGS_KEY,JSON.stringify(l))}
+function addLog(a,item){
+  var l=getLogs();l.unshift({id:Date.now()+Math.random(),action:a,title:item.title||'',type:item.type||'',department:item.department||'',time:new Date().toISOString(),date:td()});if(l.length>500)l.length=500;saveLogs(l)
+}
+function showLogs(){
+  var c=document.getElementById('linksContainer'),l=getLogs();
+  var h='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div class="section-title" style="margin:0">📋 更新记录 <span class="count">('+l.length+'条)</span></div><div style="display:flex;gap:4px"><button class="btn btn-ghost btn-sm" onclick="filterLogs(0)" id="logT">今日</button><button class="btn btn-ghost btn-sm" onclick="filterLogs(1)" id="logW">本周</button><button class="btn btn-ghost btn-sm" onclick="filterLogs(2)" id="logA" style="background:var(--primary);color:#fff">全部</button></div></div><div id="logContent" style="background:#fff;border-radius:8px;box-shadow:var(--shadow);padding:8px 14px">'+renderLogs(l)+'</div>';
+  c.innerHTML=h;window._logMode=2
+}
+function renderLogs(logs){
+  if(!logs||!logs.length)return'<div style="text-align:center;padding:30px;color:var(--gray-400);font-size:13px">暂无记录</div>';
+  var lb={add:'➕ 新增',edit:'✏️ 修改',delete:'🗑️ 删除'},today=td(),cd='',h='';
+  logs.forEach(function(l,i){
+    var d=l.date||td(),is=d===today;
+    if(d!==cd){cd=d;h+='<div style="font-size:11px;font-weight:600;color:var(--gray-500);margin:10px 0 4px;padding-bottom:2px;border-bottom:1px solid var(--gray-100)">'+(is?'今日':d)+'</div>'}
+    h+='<div onclick="showLogDetail('+i+')" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;background:'+(is?'var(--primary-light)':'transparent')+';margin-bottom:2px" onmouseover="this.style.background=\\'var(--gray-100)\\'" onmouseout="this.style.background=\\''+(is?'var(--primary-light)':'transparent')+'\\'"><span style="font-size:12px">'+(lb[l.action]||'📋')+'</span><span style="font-size:12px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+l.title+'</span><span style="font-size:10px;padding:1px 4px;border-radius:3px;background:var(--gray-100)">'+l.type+'</span><span style="font-size:10px;color:var(--gray-400)">'+(l.time.split('T')[1]||'').split(':').slice(0,2).join(':')+'</span></div>'
+  });return h
+}
+function filterLogs(m){
+  window._logMode=m;var l=getLogs(),now=new Date(),today=td();
+  ['logT','logW','logA'].forEach(function(id,i){var e=document.getElementById(id);if(e)e.style=i===m?'background:var(--primary);color:#fff':'background:transparent;color:var(--gray-600)'});
+  if(m===0)l=l.filter(function(x){return x.date===today});
+  if(m===1){var ws=new Date(now);ws.setDate(now.getDate()-now.getDay());l=l.filter(function(x){return new Date(x.date)>=ws})}
+  document.getElementById('logContent').innerHTML=renderLogs(l)
+}
+function showLogDetail(i){
+  var l=getLogs()[i];if(!l)return;
+  var lb={add:'➕ 新增',edit:'✏️ 修改',delete:'🗑️ 删除'},ts=l.time.replace('T',' ').split('.')[0];
+  var o=document.createElement('div');o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)';
+  o.onclick=function(e){if(e.target===this)o.remove()};o.innerHTML='<div style="background:#fff;border-radius:12px;width:100%;max-width:380px;padding:24px;animation:modalIn .25s"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="font-size:28px">'+(l.action==='add'?'➕':l.action==='edit'?'✏️':'🗑️')+'</span><div><h2 style="font-size:16px;font-weight:700;margin:0">'+(lb[l.action]||'操作')+'</h2><div style="font-size:11px;color:var(--gray-400);margin-top:2px">'+ts+'</div></div></div><div style="background:var(--gray-50);border-radius:8px;padding:12px"><div style="display:flex;margin-bottom:4px"><span style="font-size:12px;color:var(--gray-500);width:56px">标题</span><span style="font-size:12px">'+l.title+'</span></div><div style="display:flex;margin-bottom:4px"><span style="font-size:12px;color:var(--gray-500);width:56px">类型</span><span style="font-size:12px">'+l.type+'</span></div><div style="display:flex;margin-bottom:4px"><span style="font-size:12px;color:var(--gray-500);width:56px">部门</span><span style="font-size:12px">'+l.department+'</span></div><div style="display:flex"><span style="font-size:12px;color:var(--gray-500);width:56px">日期</span><span style="font-size:12px">'+l.date+'</span></div></div><button onclick="o.remove()" style="width:100%;margin-top:12px;padding:9px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;cursor:pointer">关闭</button></div>';document.body.appendChild(o)
 }
 
-// ===== Initialization =====
-function init() {
-  loadCloudConfig();
-  (async () => {
-    try {
-      var loaded = await loadFromCloud();
-      if (!loaded) {
-        var stored = localStorage.getItem('loomy_biz_links_v2');
-        if (stored) { try { links = JSON.parse(stored); } catch(e) { links = JSON.parse(JSON.stringify(DEFAULT_LINKS)); } }
-        else { links = JSON.parse(JSON.stringify(DEFAULT_LINKS)); saveData(); }
-      }
-    } catch(e) { }
-    updateSyncStatus();
-    var d = new Date();
-    var ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    var wd = ['周日','周一','周二','周三','周四','周五','周六'];
-    document.getElementById('headerDate').textContent = ds + ' ' + wd[d.getDay()];
-    if (sessionStorage.getItem('loomy_admin_session') === '1') {
-      adminMode = true;
-      document.getElementById('adminBar').style.display = 'block';
-      document.getElementById('adminToggleBtn').textContent = '🔓 退出管理';
-    }
-    renderLinks();
-    setupLightbox();
-    if (typeof showAnnouncements === 'function') showAnnouncements();
-  })();
+// ===== Announcement System =====
+function getAnns(){try{return JSON.parse(localStorage.getItem(ANN_KEY))||[]}catch(e){return[]}}
+function saveAnns(a){localStorage.setItem(ANN_KEY,JSON.stringify(a))}
+function getActiveAnns(){var t=td();return getAnns().filter(function(a){return a.enabled!==false&&(!a.expire||t<=a.expire)})}
+function shouldShow(a){
+  if(!a||a.enabled===false)return false;
+  var k='loomy_ann_'+a.id,f=localStorage.getItem(k),fr=a.freq||'always';
+  if(fr==='once'&&f)return false;
+  if(fr==='hourly'){if(f){var d=(new Date()-new Date(f))/60000;if(d<60)return false}}else if(fr==='daily'){if(f&&f.startsWith(td()))return false}else if(fr==='weekly'){if(f){var d=(new Date()-new Date(f))/86400000;if(d<7)return false}}
+  return true
 }
-
-function saveData() {
-  localStorage.setItem('loomy_biz_links_v2', JSON.stringify(links));
+function showAnns(){
+  var a=getActiveAnns();if(!a.length)return;
+  var bar=document.getElementById('annBar');if(!bar){bar=document.createElement('div');bar.id='annBar';bar.style.cssText='display:none;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;text-align:center;padding:8px 20px;font-size:13px;font-weight:500;cursor:pointer;position:relative';bar.onclick=function(){openAnnView(0)};var c=document.createElement('span');c.textContent='✕';c.style.cssText='position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;opacity:.7';c.onclick=function(e){e.stopPropagation();bar.style.display='none'};bar.appendChild(c);document.querySelector('.header').after(bar)}
+  bar.childNodes[0].textContent=a.length>1?'📢 '+a.length+' 条公告 - 点击查看':'📢 '+(a[0].title||'新公告')+' - 点击查看';bar.style.display='block';
+  var toShow=a.filter(function(x){return shouldShow(x)});
+  if(toShow.length){annViewIdx=0;var first=a.findIndex(function(x){return x.id===toShow[0].id});annViewIdx=first>=0?first:0;showAnnPopup();a.forEach(function(x){var k='loomy_ann_'+x.id;localStorage.setItem(k,new Date().toISOString())})}
 }
-
-function setupLightbox() {
-  document.getElementById('lightboxOverlay').addEventListener('click', function(e) { if (e.target === this) closeLightbox(); });
-  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLightbox(); if (e.key === 'ArrowLeft') prevLightbox(); if (e.key === 'ArrowRight') nextLightbox(); });
+function showAnnPopup(){
+  var a=getActiveAnns(),item=a[annViewIdx];if(!item)return;
+  var o=document.getElementById('annPopup');if(!o){
+    o=document.createElement('div');o.id='annPopup';o.className='modal-overlay';o.onclick=function(e){if(e.target===this)closeAnnPopup()};
+    o.innerHTML='<div class="modal" style="max-width:440px"><div style="text-align:center"><div id="apIcon" style="font-size:36px;margin-bottom:8px">📢</div><h2 id="apTitle" style="font-size:17px;font-weight:700"></h2><div id="apTime" style="font-size:11px;color:var(--gray-400);margin:4px 0 12px"></div><div id="apContent" style="font-size:13px;line-height:1.8;white-space:pre-wrap;color:var(--gray-700)"></div></div><div style="display:flex;gap:6px;margin-top:14px"><button id="apPrev" class="btn btn-ghost btn-sm" onclick="annPrev()" style="flex:1">← 上一条</button><button id="apNext" class="btn btn-ghost btn-sm" onclick="annNext()" style="flex:1">下一条 →</button></div><div style="text-align:center;font-size:11px;color:var(--gray-400);margin:6px 0"><span id="apCounter"></span></div><button onclick="closeAnnPopup()" style="width:100%;padding:9px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:13px;cursor:pointer">我知道了</button></div>';
+    document.body.appendChild(o)
+  }
+  o.classList.add('show');
+  document.getElementById('apIcon').textContent=item.icon||'📢';document.getElementById('apTitle').textContent=item.title||'公告';
+  document.getElementById('apContent').textContent=item.content||'';document.getElementById('apTime').textContent=item.date||'';
+  document.getElementById('apCounter').textContent=(annViewIdx+1)+' / '+a.length;
+  document.getElementById('apPrev').style.display=annViewIdx>0?'':'none';document.getElementById('apNext').style.display=annViewIdx<a.length-1?'':'none'
 }
+function closeAnnPopup(){var o=document.getElementById('annPopup');if(o)o.classList.remove('show')}
+function annPrev(){if(annViewIdx>0){annViewIdx--;showAnnPopup()}}
+function annNext(){if(annViewIdx<getActiveAnns().length-1){annViewIdx++;showAnnPopup()}}
+function openAnnView(i){var a=getActiveAnns();if(a.length){annViewIdx=i||0;showAnnPopup()}}
 
-function renderLinks() {
-  var search = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-  var container = document.getElementById('linksContainer');
-  var filtered = [];
-  for (var i = 0; i < links.length; i++) filtered.push(links[i]);
-  if (search) {
-    filtered = filtered.filter(function(l) {
-      return (l.title || '').toLowerCase().includes(search) ||
-        (l.description || '').toLowerCase().includes(search) ||
-        (l.tags || []).some(function(t) { return t.toLowerCase().includes(search); });
-    });
-  }
-  if (currentFilter !== 'all') {
-    filtered = filtered.filter(function(l) { return l.type === currentFilter || l.department === currentFilter; });
-  }
-  filtered.sort(function(a, b) {
-    if (a.isToday !== b.isToday) return a.isToday ? -1 : 1;
-    return (b.date || '').localeCompare(a.date || '');
-  });
-  document.getElementById('statTotal').textContent = links.length;
-  document.getElementById('statToday').textContent = links.filter(function(l) { return l.isToday; }).length;
-  var types = {}; var depts = {};
-  links.forEach(function(l) { types[l.type] = 1; depts[l.department] = 1; });
-  document.getElementById('statTypes').textContent = Object.keys(types).length;
-  document.getElementById('statDepts').textContent = Object.keys(depts).length;
-  
-  if (filtered.length === 0) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>没有匹配的链接，试试其他关键词吧</p></div>';
-    return;
-  }
-  if (currentView === 'all') {
-    container.innerHTML = '<div class="links-grid">' + filtered.map(function(l) { return buildCard(l); }).join('') + '</div>';
-    return;
-  }
-  var groups = {};
-  filtered.forEach(function(l) {
-    var g = currentView === 'type' ? l.type : currentView === 'dept' ? l.department : l.date;
-    if (!groups[g]) groups[g] = [];
-    groups[g].push(l);
-  });
-  var entries = Object.entries(groups);
-  if (currentView === 'type') { var order = ['日报','周报','公告','通知','项目文档','其他']; entries.sort(function(a,b) { var ai = order.indexOf(a[0]); var bi = order.indexOf(b[0]); return (ai<0?99:ai)-(bi<0?99:bi); }); }
-  else if (currentView === 'date') { entries.sort(function(a,b) { return b[0].localeCompare(a[0]); }); }
-  else { entries.sort(function(a,b) { return b[1].length - a[1].length; }); }
-  var html = '';
-  entries.forEach(function(entry) {
-    var group = entry[0], items = entry[1];
-    var icon = currentView === 'type' ? getTypeIcon(group) : currentView === 'dept' ? '🏢' : '📅';
-    html += '<div class="group-section"><div class="section-title">' + icon + ' ' + group + ' <span class="count">(' + items.length + ')</span></div><div class="links-grid">' + items.map(function(l) { return buildCard(l); }).join('') + '</div></div>';
-  });
-  container.innerHTML = html;
-  if (adminMode) {
-    var editBtns = container.querySelectorAll('.admin-edit');
-    for (var j = 0; j < editBtns.length; j++) { editBtns[j].addEventListener('click', function() { openEditModal(this.dataset.id); }); }
-    var delBtns = container.querySelectorAll('.admin-delete');
-    for (var k = 0; k < delBtns.length; k++) { delBtns[k].addEventListener('click', function() { deleteLink(this.dataset.id); }); }
+// ===== Announcement Admin =====
+function openAnnounceMgr(){
+  document.getElementById('amEditIdx').value='-1';document.getElementById('amFormTitle').textContent='➕ 新增公告';
+  document.getElementById('amCancelBtn').style.display='none';document.getElementById('amErr').style.display='none';
+  clearAnnForm();renderAnnList();openModal('announceModal')
+}
+function clearAnnForm(){document.getElementById('amIcon').value='📢';document.getElementById('amTitle').value='';document.getElementById('amContent').value='';document.getElementById('amFreq').value='always';document.getElementById('amExpire').value='';document.getElementById('amEnabled').checked=true}
+function cancelAnnEdit(){document.getElementById('amEditIdx').value='-1';document.getElementById('amFormTitle').textContent='➕ 新增公告';document.getElementById('amCancelBtn').style.display='none';clearAnnForm()}
+function saveAnnounce(){
+  var t=document.getElementById('amTitle').value.trim(),c=document.getElementById('amContent').value.trim();
+  if(!t||!c){document.getElementById('amErr').textContent='请填写标题和内容';document.getElementById('amErr').style.display='block';return}
+  document.getElementById('amErr').style.display='none';var ei=parseInt(document.getElementById('amEditIdx').value),l=getAnns();
+  var item={id:Date.now()+Math.random(),icon:document.getElementById('amIcon').value,title:t,content:c,frequency:document.getElementById('amFreq').value,expire:document.getElementById('amExpire').value,enabled:document.getElementById('amEnabled').checked,date:td()};
+  if(ei>=0&&ei<l.length){item.id=l[ei].id;l[ei]=item;toast('已更新','success')}else{l.push(item);toast('已添加','success')}
+  saveAnns(l);renderAnnList();clearAnnForm();document.getElementById('amEditIdx').value='-1';document.getElementById('amFormTitle').textContent='➕ 新增公告';document.getElementById('amCancelBtn').style.display='none'
+}
+function editAnn(i){var l=getAnns(),item=l[i];if(!item)return;
+  document.getElementById('amFormTitle').textContent='✏️ 编辑公告';document.getElementById('amEditIdx').value=i;document.getElementById('amCancelBtn').style.display='';
+  document.getElementById('amIcon').value=item.icon||'📢';document.getElementById('amTitle').value=item.title||'';document.getElementById('amContent').value=item.content||'';
+  document.getElementById('amFreq').value=item.frequency||'always';document.getElementById('amExpire').value=item.expire||'';document.getElementById('amEnabled').checked=item.enabled!==false
+}
+function deleteAnn(i){if(!confirm('确定删除？'))return;var l=getAnns();l.splice(i,1);saveAnns(l);renderAnnList();toast('已删除','info')}
+function renderAnnList(){
+  var l=getAnns();document.getElementById('amCount').textContent='('+l.length+'条)';var c=document.getElementById('amList');
+  if(!l.length){c.innerHTML='<div style="text-align:center;padding:16px;color:var(--gray-400);font-size:12px">暂无公告</div>';return}
+  var lb={always:'总是',hourly:'每小时',daily:'每天',weekly:'每周',once:'仅一次'};
+  c.innerHTML=l.map(function(item,i){return'<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--gray-200);border-radius:6px;margin-bottom:4px;background:'+(item.enabled!==false?'#fff':'var(--gray-50)')+'"><span style="font-size:18px">'+(item.icon||'📢')+'</span><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">'+item.title+(item.enabled===false?' <span style="color:var(--gray-400);font-weight:400">(已禁用)</span>':'')+'</div><div style="font-size:10px;color:var(--gray-400)">'+(lb[item.frequency]||'总是')+(item.expire?' · 至 '+item.expire:'')+'</div></div><button class="btn btn-ghost btn-sm" onclick="editAnn('+i+')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteAnn('+i+')">🗑️</button></div>'}).join('')
+}
+function clearAllAnnounces(){if(!confirm('确定清除全部公告？'))return;localStorage.removeItem(ANN_KEY);renderAnnList();closeAnnPopup();toast('已清除','info')}
 
+// ===== Event listeners =====
+document.addEventListener('click',function(e){
+  var m=document.querySelectorAll('.modal-overlay.show');m.forEach(function(el){if(e.target===el){el.classList.remove('show')}})
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.show').forEach(function(el){el.classList.remove('show')})}});
+
+// ===== Start =====
 init();
-
-  }
-}
-
-function getTypeIcon(type) { var m = {'日报':'📋','周报':'📊','公告':'📢','通知':'📌','项目文档':'📄','其他':'📁'}; return m[type] || '📁'; }
-
-function setFilter(f) { currentFilter = f; renderLinks(); }
-
-// ===== Date Range Filter =====
-var dateRangeFilter = 'all';
-function setDateRange(range) {
-  dateRangeFilter = range;
-  var ids = ['drAll','drToday','drWeek','drMonth'];
-  for (var i = 0; i < ids.length; i++) {
-    var el = document.getElementById(ids[i]);
-    if (el) el.style = ids[i] === ('dr' + range.charAt(0).toUpperCase() + range.slice(1)) ? 'background:var(--primary);color:#fff;border-color:var(--primary);padding:6px 10px;font-size:12px;' : 'padding:6px 10px;font-size:12px;';
-  }
-  renderLinks();
-}
-
-function buildCard(l) {
-  var isToday = l.isToday || l.date === new Date().toISOString().split('T')[0];
-  var todayClass = isToday ? 'today' : '';
-  var todayBadge = isToday ? '<span class="today-badge">🆕 今日</span>' : '';
-  var linkUrl = l.url && l.url !== '#' ? l.url : '#';
-  var isExternal = linkUrl !== '#' && (linkUrl.startsWith('http') || linkUrl.startsWith('//'));
-  var tags = (l.tags || []).map(function(t) { return '<span class="mini-tag">' + t + '</span>'; }).join('');
-  var imageHtml = '';
-  if (l.images && l.images.length) {
-    var imgs = l.images, cols = Math.min(imgs.length, 3);
-    var imgsHtmlArr = [];
-    for (var m = 0; m < imgs.length; m++) {
-      var src = imgs[m].src || imgs[m];
-      imgsHtmlArr.push('<div class="card-image-wrap" onclick="event.stopPropagation();openLightbox([\'' + src.replace(/'/g, "\\'") + '\'],0)" style="aspect-ratio:' + (imgs.length > 1 ? '1' : '16/9') + ';"><img src="' + src + '" alt="' + l.title + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=\\\"img-placeholder\\\"><span class=\\\"icon\\\">🖼️</span></div>\'"></div>');
-    }
-    imageHtml = '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:6px;margin:10px 0;">' + imgsHtmlArr.join('') + '</div>';
-  }
-  var attachHtml = '';
-  if (l.attachment && l.attachment.data) {
-    var ext = l.attachment.name.split('.').pop().toLowerCase();
-    attachHtml = '<div style="margin-top:8px;padding:8px 10px;background:var(--gray-50);border-radius:6px;border:1px solid var(--gray-200);display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">📎</span><span style="font-size:12px;color:var(--gray-600);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + l.attachment.name + '</span><a href="' + l.attachment.data + '" download="' + l.attachment.name + '" class="btn btn-primary btn-sm" style="padding:3px 10px;font-size:11px;">⬇ 下载</a></div>';
-  }
-  var adminActions = adminMode ? '<div class="admin-actions" style="display:flex;gap:6px;flex-shrink:0;"><button class="btn btn-ghost btn-sm admin-edit" data-id="' + l.id + '">✏️</button><button class="btn btn-danger btn-sm admin-delete" data-id="' + l.id + '">🗑️</button></div>' : '';
-  return '<div class="link-card ' + todayClass + '" onclick="showCardDetail(' + l.id + ')">' + todayBadge + '<div class="link-card-header"><span class="type-tag type-' + l.type + '">' + l.type + '</span>' + adminActions + '</div><h3>' + l.title + '</h3>' + (l.description ? '<p class="desc">' + l.description + '</p>' : '') + imageHtml + attachHtml + '<div class="meta"><span class="meta-item"><span class="dept-tag">🏢 ' + l.department + '</span></span><span class="meta-item">📅 ' + l.date + '</span>' + (adminMode ? '<span class="meta-item" title="点击次数">👁️ ' + (l.clicks || 0) + '</span>' : '') + '</div>' + tags + '<div class="link-card-actions">' + (isExternal ? '<a href="' + linkUrl + '" target="_blank" rel="noopener" class="btn btn-primary btn-sm" onclick="event.stopPropagation();trackClick(' + l.id + ')">🔗 打开链接</a>' : '<span style="font-size:12px;color:var(--gray-400);padding:6px 0;">📄 纯文本内容</span>') + '<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();copyLink(\'' + encodeURIComponent(linkUrl) + '\',\'' + (l.title || '').replace(/'/g, "\\'") + '\')">📋 复制</button></div></div>';
-}
-
-function trackClick(id) {
-  for (var n = 0; n < links.length; n++) { if (links[n].id == id) { if (!links[n].clicks) links[n].clicks = 0; links[n].clicks++; saveData(); break; } }
-}
-
-function copyLink(url, title) {
-  var decoded = decodeURIComponent(url);
-  if (decoded === '#') { showToast('ℹ️ 没有链接可复制', 'info'); return; }
-  navigator.clipboard.writeText(decoded).then(function() { showToast('📋 已复制: ' + title, 'success'); }).catch(function() { showToast('❌ 复制失败', 'error'); });
-}
-
-function openEditModal(id) {
-  for (var p = 0; p < links.length; p++) { if (links[p].id == id) {
-    var l = links[p];
-    document.getElementById('modalTitle').textContent = '编辑链接';
-    document.getElementById('editId').value = l.id;
-    document.getElementById('inputTitle').value = l.title || '';
-    document.getElementById('inputUrl').value = l.url || '';
-    document.getElementById('inputDesc').value = l.description || '';
-    document.getElementById('inputType').value = l.type || '日报';
-    document.getElementById('inputDept').value = l.department || '全公司';
-    document.getElementById('inputTags').value = (l.tags || []).join(', ');
-    document.getElementById('inputDate').value = l.date || '';
-    document.getElementById('inputIsToday').checked = l.isToday || false;
-    if (l.images && l.images.length) { pendingImages = l.images.map(function(x) { return {src:x.src||x, name:x.name||''}; }); }
-    else if (l.image) { pendingImages = [{src:l.image, name:''}]; }
-    else { pendingImages = []; }
-    var ic = document.getElementById('imageListContainer');
-    if (ic) renderImageList();
-    if (l.attachment && l.attachment.data) { pendingAttachment = l.attachment; showAttachmentPreview(l.attachment.name); }
-    else { clearAttachment(); }
-    document.getElementById('linkModal').classList.add('show');
-    break;
-  }}
-}
-
-function openAddModal() {
-  document.getElementById('modalTitle').textContent = '新增链接';
-  document.getElementById('editId').value = '';
-  document.getElementById('linkForm').reset();
-  var d = new Date();
-  document.getElementById('inputDate').value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-  document.getElementById('inputIsToday').checked = true;
-  pendingImages = [];
-  pendingAttachment = null;
-  var ic = document.getElementById('imageListContainer');
-  if (ic) ic.innerHTML = '<span style="font-size:12px;color:var(--gray-400);">暂无图片</span>';
-  document.getElementById('attachmentPreview').classList.remove('show');
-  document.getElementById('linkModal').classList.add('show');
-}
-
-function deleteLink(id) {
-  if (!confirm('确定要删除这个链接吗？')) return;
-  var item = null;
-  for (var q = 0; q < links.length; q++) { if (links[q].id == id) { item = links[q]; break; } }
-  links = links.filter(function(x) { return x.id != id; });
-  saveData();
-  renderLinks();
-  if (item) addChangeLog('delete', item);
-  showToast('🗑️ 链接已删除', 'info');
-  if (cloudConfig && cloudConfig.token) { syncToCloud(); }
-}
-
-function closeLinkModal() { document.getElementById('linkModal').classList.remove('show'); }
-
-
->
+</script></body></html>
