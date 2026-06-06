@@ -871,4 +871,212 @@ async function loadFromCloud() {
     });
   }
   return tryUrl(0);
-}>
+}
+
+// ===== Initialization =====
+function init() {
+  loadCloudConfig();
+  (async () => {
+    try {
+      var loaded = await loadFromCloud();
+      if (!loaded) {
+        var stored = localStorage.getItem('loomy_biz_links_v2');
+        if (stored) { try { links = JSON.parse(stored); } catch(e) { links = JSON.parse(JSON.stringify(DEFAULT_LINKS)); } }
+        else { links = JSON.parse(JSON.stringify(DEFAULT_LINKS)); saveData(); }
+      }
+    } catch(e) { }
+    updateSyncStatus();
+    var d = new Date();
+    var ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    var wd = ['周日','周一','周二','周三','周四','周五','周六'];
+    document.getElementById('headerDate').textContent = ds + ' ' + wd[d.getDay()];
+    if (sessionStorage.getItem('loomy_admin_session') === '1') {
+      adminMode = true;
+      document.getElementById('adminBar').style.display = 'block';
+      document.getElementById('adminToggleBtn').textContent = '🔓 退出管理';
+    }
+    renderLinks();
+    setupLightbox();
+    if (typeof showAnnouncements === 'function') showAnnouncements();
+  })();
+}
+
+function saveData() {
+  localStorage.setItem('loomy_biz_links_v2', JSON.stringify(links));
+}
+
+function setupLightbox() {
+  document.getElementById('lightboxOverlay').addEventListener('click', function(e) { if (e.target === this) closeLightbox(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLightbox(); if (e.key === 'ArrowLeft') prevLightbox(); if (e.key === 'ArrowRight') nextLightbox(); });
+}
+
+function renderLinks() {
+  var search = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  var container = document.getElementById('linksContainer');
+  var filtered = [];
+  for (var i = 0; i < links.length; i++) filtered.push(links[i]);
+  if (search) {
+    filtered = filtered.filter(function(l) {
+      return (l.title || '').toLowerCase().includes(search) ||
+        (l.description || '').toLowerCase().includes(search) ||
+        (l.tags || []).some(function(t) { return t.toLowerCase().includes(search); });
+    });
+  }
+  if (currentFilter !== 'all') {
+    filtered = filtered.filter(function(l) { return l.type === currentFilter || l.department === currentFilter; });
+  }
+  filtered.sort(function(a, b) {
+    if (a.isToday !== b.isToday) return a.isToday ? -1 : 1;
+    return (b.date || '').localeCompare(a.date || '');
+  });
+  document.getElementById('statTotal').textContent = links.length;
+  document.getElementById('statToday').textContent = links.filter(function(l) { return l.isToday; }).length;
+  var types = {}; var depts = {};
+  links.forEach(function(l) { types[l.type] = 1; depts[l.department] = 1; });
+  document.getElementById('statTypes').textContent = Object.keys(types).length;
+  document.getElementById('statDepts').textContent = Object.keys(depts).length;
+  
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>没有匹配的链接，试试其他关键词吧</p></div>';
+    return;
+  }
+  if (currentView === 'all') {
+    container.innerHTML = '<div class="links-grid">' + filtered.map(function(l) { return buildCard(l); }).join('') + '</div>';
+    return;
+  }
+  var groups = {};
+  filtered.forEach(function(l) {
+    var g = currentView === 'type' ? l.type : currentView === 'dept' ? l.department : l.date;
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(l);
+  });
+  var entries = Object.entries(groups);
+  if (currentView === 'type') { var order = ['日报','周报','公告','通知','项目文档','其他']; entries.sort(function(a,b) { var ai = order.indexOf(a[0]); var bi = order.indexOf(b[0]); return (ai<0?99:ai)-(bi<0?99:bi); }); }
+  else if (currentView === 'date') { entries.sort(function(a,b) { return b[0].localeCompare(a[0]); }); }
+  else { entries.sort(function(a,b) { return b[1].length - a[1].length; }); }
+  var html = '';
+  entries.forEach(function(entry) {
+    var group = entry[0], items = entry[1];
+    var icon = currentView === 'type' ? getTypeIcon(group) : currentView === 'dept' ? '🏢' : '📅';
+    html += '<div class="group-section"><div class="section-title">' + icon + ' ' + group + ' <span class="count">(' + items.length + ')</span></div><div class="links-grid">' + items.map(function(l) { return buildCard(l); }).join('') + '</div></div>';
+  });
+  container.innerHTML = html;
+  if (adminMode) {
+    var editBtns = container.querySelectorAll('.admin-edit');
+    for (var j = 0; j < editBtns.length; j++) { editBtns[j].addEventListener('click', function() { openEditModal(this.dataset.id); }); }
+    var delBtns = container.querySelectorAll('.admin-delete');
+    for (var k = 0; k < delBtns.length; k++) { delBtns[k].addEventListener('click', function() { deleteLink(this.dataset.id); }); }
+
+init();
+
+  }
+}
+
+function getTypeIcon(type) { var m = {'日报':'📋','周报':'📊','公告':'📢','通知':'📌','项目文档':'📄','其他':'📁'}; return m[type] || '📁'; }
+
+function setFilter(f) { currentFilter = f; renderLinks(); }
+
+// ===== Date Range Filter =====
+var dateRangeFilter = 'all';
+function setDateRange(range) {
+  dateRangeFilter = range;
+  var ids = ['drAll','drToday','drWeek','drMonth'];
+  for (var i = 0; i < ids.length; i++) {
+    var el = document.getElementById(ids[i]);
+    if (el) el.style = ids[i] === ('dr' + range.charAt(0).toUpperCase() + range.slice(1)) ? 'background:var(--primary);color:#fff;border-color:var(--primary);padding:6px 10px;font-size:12px;' : 'padding:6px 10px;font-size:12px;';
+  }
+  renderLinks();
+}
+
+function buildCard(l) {
+  var isToday = l.isToday || l.date === new Date().toISOString().split('T')[0];
+  var todayClass = isToday ? 'today' : '';
+  var todayBadge = isToday ? '<span class="today-badge">🆕 今日</span>' : '';
+  var linkUrl = l.url && l.url !== '#' ? l.url : '#';
+  var isExternal = linkUrl !== '#' && (linkUrl.startsWith('http') || linkUrl.startsWith('//'));
+  var tags = (l.tags || []).map(function(t) { return '<span class="mini-tag">' + t + '</span>'; }).join('');
+  var imageHtml = '';
+  if (l.images && l.images.length) {
+    var imgs = l.images, cols = Math.min(imgs.length, 3);
+    var imgsHtmlArr = [];
+    for (var m = 0; m < imgs.length; m++) {
+      var src = imgs[m].src || imgs[m];
+      imgsHtmlArr.push('<div class="card-image-wrap" onclick="event.stopPropagation();openLightbox([\'' + src.replace(/'/g, "\\'") + '\'],0)" style="aspect-ratio:' + (imgs.length > 1 ? '1' : '16/9') + ';"><img src="' + src + '" alt="' + l.title + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=\\\"img-placeholder\\\"><span class=\\\"icon\\\">🖼️</span></div>\'"></div>');
+    }
+    imageHtml = '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:6px;margin:10px 0;">' + imgsHtmlArr.join('') + '</div>';
+  }
+  var attachHtml = '';
+  if (l.attachment && l.attachment.data) {
+    var ext = l.attachment.name.split('.').pop().toLowerCase();
+    attachHtml = '<div style="margin-top:8px;padding:8px 10px;background:var(--gray-50);border-radius:6px;border:1px solid var(--gray-200);display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">📎</span><span style="font-size:12px;color:var(--gray-600);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + l.attachment.name + '</span><a href="' + l.attachment.data + '" download="' + l.attachment.name + '" class="btn btn-primary btn-sm" style="padding:3px 10px;font-size:11px;">⬇ 下载</a></div>';
+  }
+  var adminActions = adminMode ? '<div class="admin-actions" style="display:flex;gap:6px;flex-shrink:0;"><button class="btn btn-ghost btn-sm admin-edit" data-id="' + l.id + '">✏️</button><button class="btn btn-danger btn-sm admin-delete" data-id="' + l.id + '">🗑️</button></div>' : '';
+  return '<div class="link-card ' + todayClass + '" onclick="showCardDetail(' + l.id + ')">' + todayBadge + '<div class="link-card-header"><span class="type-tag type-' + l.type + '">' + l.type + '</span>' + adminActions + '</div><h3>' + l.title + '</h3>' + (l.description ? '<p class="desc">' + l.description + '</p>' : '') + imageHtml + attachHtml + '<div class="meta"><span class="meta-item"><span class="dept-tag">🏢 ' + l.department + '</span></span><span class="meta-item">📅 ' + l.date + '</span>' + (adminMode ? '<span class="meta-item" title="点击次数">👁️ ' + (l.clicks || 0) + '</span>' : '') + '</div>' + tags + '<div class="link-card-actions">' + (isExternal ? '<a href="' + linkUrl + '" target="_blank" rel="noopener" class="btn btn-primary btn-sm" onclick="event.stopPropagation();trackClick(' + l.id + ')">🔗 打开链接</a>' : '<span style="font-size:12px;color:var(--gray-400);padding:6px 0;">📄 纯文本内容</span>') + '<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();copyLink(\'' + encodeURIComponent(linkUrl) + '\',\'' + (l.title || '').replace(/'/g, "\\'") + '\')">📋 复制</button></div></div>';
+}
+
+function trackClick(id) {
+  for (var n = 0; n < links.length; n++) { if (links[n].id == id) { if (!links[n].clicks) links[n].clicks = 0; links[n].clicks++; saveData(); break; } }
+}
+
+function copyLink(url, title) {
+  var decoded = decodeURIComponent(url);
+  if (decoded === '#') { showToast('ℹ️ 没有链接可复制', 'info'); return; }
+  navigator.clipboard.writeText(decoded).then(function() { showToast('📋 已复制: ' + title, 'success'); }).catch(function() { showToast('❌ 复制失败', 'error'); });
+}
+
+function openEditModal(id) {
+  for (var p = 0; p < links.length; p++) { if (links[p].id == id) {
+    var l = links[p];
+    document.getElementById('modalTitle').textContent = '编辑链接';
+    document.getElementById('editId').value = l.id;
+    document.getElementById('inputTitle').value = l.title || '';
+    document.getElementById('inputUrl').value = l.url || '';
+    document.getElementById('inputDesc').value = l.description || '';
+    document.getElementById('inputType').value = l.type || '日报';
+    document.getElementById('inputDept').value = l.department || '全公司';
+    document.getElementById('inputTags').value = (l.tags || []).join(', ');
+    document.getElementById('inputDate').value = l.date || '';
+    document.getElementById('inputIsToday').checked = l.isToday || false;
+    if (l.images && l.images.length) { pendingImages = l.images.map(function(x) { return {src:x.src||x, name:x.name||''}; }); }
+    else if (l.image) { pendingImages = [{src:l.image, name:''}]; }
+    else { pendingImages = []; }
+    var ic = document.getElementById('imageListContainer');
+    if (ic) renderImageList();
+    if (l.attachment && l.attachment.data) { pendingAttachment = l.attachment; showAttachmentPreview(l.attachment.name); }
+    else { clearAttachment(); }
+    document.getElementById('linkModal').classList.add('show');
+    break;
+  }}
+}
+
+function openAddModal() {
+  document.getElementById('modalTitle').textContent = '新增链接';
+  document.getElementById('editId').value = '';
+  document.getElementById('linkForm').reset();
+  var d = new Date();
+  document.getElementById('inputDate').value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  document.getElementById('inputIsToday').checked = true;
+  pendingImages = [];
+  pendingAttachment = null;
+  var ic = document.getElementById('imageListContainer');
+  if (ic) ic.innerHTML = '<span style="font-size:12px;color:var(--gray-400);">暂无图片</span>';
+  document.getElementById('attachmentPreview').classList.remove('show');
+  document.getElementById('linkModal').classList.add('show');
+}
+
+function deleteLink(id) {
+  if (!confirm('确定要删除这个链接吗？')) return;
+  var item = null;
+  for (var q = 0; q < links.length; q++) { if (links[q].id == id) { item = links[q]; break; } }
+  links = links.filter(function(x) { return x.id != id; });
+  saveData();
+  renderLinks();
+  if (item) addChangeLog('delete', item);
+  showToast('🗑️ 链接已删除', 'info');
+  if (cloudConfig && cloudConfig.token) { syncToCloud(); }
+}
+
+function closeLinkModal() { document.getElementById('linkModal').classList.remove('show'); }
+
+
+>
