@@ -282,32 +282,25 @@ function saveData(){localStorage.setItem(STORAGE,JSON.stringify(links))}
 
 function loadFromCloud(){
   return new Promise(function(resolve){
-    var urls=[
-      'https://raw.githubusercontent.com/'+GH_U+'/'+GH_R+'/'+GH_B+'/'+GH_D,
-      'https://api.github.com/repos/'+GH_U+'/'+GH_R+'/contents/'+GH_D,
-      './'+GH_D
-    ];
-    function tryOne(i){
-      if(i>=urls.length){resolve(false);return}
-      var u=urls[i],x=new XMLHttpRequest();x.open('GET',u);
-      if(u.indexOf('api.github')>-1)x.setRequestHeader('Accept','application/vnd.github.v3+json');
-      x.onload=function(){
-        if(x.status===200){
-          try{
-            var d;if(u.indexOf('api.github')>-1){var r=JSON.parse(x.responseText);d=JSON.parse(decodeURIComponent(escape(atob(r.content))))}
-            else d=JSON.parse(x.responseText);
-            if(Array.isArray(d)&&d.length){links=d;saveData();renderLinks();resolve(true);return}
-          }catch(e){}
-        }
-        tryOne(i+1)
-      };
-      x.onerror=function(){tryOne(i+1)};x.send()
-    }
-    tryOne(0)
+    var u='https://raw.githubusercontent.com/'+GH_U+'/'+GH_R+'/'+GH_B+'/'+GH_D;
+    fetch(u,{cache:'no-cache'}).then(function(r){
+      if(!r.ok)throw new Error('fail');
+      return r.json();
+    }).then(function(d){
+      if(Array.isArray(d)&&d.length){links=d;saveData();renderLinks();resolve(true)}
+      else resolve(false)
+    }).catch(function(){
+      // Fallback: try API
+      fetch('https://api.github.com/repos/'+GH_U+'/'+GH_R+'/contents/'+GH_D,{headers:{'Accept':'application/vnd.github.v3+json'}})
+      .then(function(r){return r.json()})
+      .then(function(d){
+        var c=JSON.parse(decodeURIComponent(escape(atob(d.content))));
+        if(Array.isArray(c)&&c.length){links=c;saveData();renderLinks();resolve(true)}
+        else resolve(false)
+      }).catch(function(){resolve(false)})
+    })
   })
 }
-
-// ===== Init =====
 function init(){
   loadCloud();upSync();document.getElementById('headerDate').textContent=tw();
   loadFromCloud().then(function(ok){if(!ok)loadData();renderLinks()});
