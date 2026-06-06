@@ -811,58 +811,42 @@ async function loadFromCloud() {
 
 // ===== Card Detail Popup =====
 function showCardDetail(id) {
-  var l = links.find(function(x) { return x.id == id; });
+  var l = null;
+  for (var i = 0; i < links.length; i++) { if (links[i].id == id) { l = links[i]; break; } }
   if (!l) return;
-  document.getElementById('detailTitle').textContent = l.title;
-  document.getElementById('detailDesc').textContent = l.description || '';
+  document.getElementById('detailTitle').innerHTML = l.title;
+  document.getElementById('detailDesc').innerHTML = l.description || '';
   document.getElementById('detailDesc').style.display = l.description ? '' : 'none';
-  document.getElementById('detailDept').textContent = l.department;
-  document.getElementById('detailDate').textContent = l.date;
-  document.getElementById('detailTags').textContent = (l.tags || []).join('、') || '无';
-  var tagHtml = '<span class="type-tag type-' + l.type + '" style="font-size:12px;padding:3px 12px;">' + l.type + '</span>';
-  if (l.isToday) tagHtml += '<span style="font-size:11px;background:#4f6ef7;color:#fff;padding:2px 10px;border-radius:10px;margin-left:6px;">🆕 今日</span>';
-  document.getElementById('detailTypeTag').innerHTML = tagHtml;
-  if (l.clicks) {
-    document.getElementById('detailClicks').style.display = 'flex';
-    document.getElementById('detailClicksCount').textContent = '👁 ' + l.clicks + ' 次';
-  } else {
-    document.getElementById('detailClicks').style.display = 'none';
-  }
+  document.getElementById('detailDept').innerHTML = l.department;
+  document.getElementById('detailDate').innerHTML = l.date;
+  document.getElementById('detailTags').innerHTML = (l.tags || []).join('、') || '无';
+  var th = '<span class="type-tag type-' + l.type + '">' + l.type + '</span>';
+  if (l.isToday) th += '<span style="font-size:11px;background:#4f6ef7;color:#fff;padding:2px 10px;border-radius:10px;margin-left:6px;">🆕 今日</span>';
+  document.getElementById('detailTypeTag').innerHTML = th;
+  if (l.clicks) { document.getElementById('detailClicks').style.display = 'flex'; document.getElementById('detailClicksCount').innerHTML = '👁 ' + l.clicks + ' 次'; }
+  else { document.getElementById('detailClicks').style.display = 'none'; }
+  var ic = document.getElementById('detailImages'); ic.innerHTML = '';
   var imgs = (l.images && l.images.length) ? l.images : (l.image ? [{ src: l.image }] : []);
-  var ic = document.getElementById('detailImages');
-  ic.innerHTML = '';
   if (imgs.length) {
-    ic.style.display = 'grid';
-    ic.style.gridTemplateColumns = 'repeat(' + Math.min(imgs.length,3) + ',1fr)';
-    for (var i = 0; i < imgs.length; i++) {
-      var src = imgs[i].src || imgs[i];
-      var d = document.createElement('div');
-      d.style.cssText = 'aspect-ratio:1;border-radius:6px;overflow:hidden;cursor:pointer;background:var(--gray-100);';
-      d.onclick = function(s) { return function() { closeCardDetail(); setTimeout(function(){ openLightbox([s],0); },150); }; }(src);
-      var imgEl = document.createElement('img');
-      imgEl.src = src;
-      imgEl.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-      imgEl.onerror = function() { this.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;">❌</div>'; };
-      d.appendChild(imgEl);
-      ic.appendChild(d);
+    ic.style.display = 'grid'; ic.style.gridTemplateColumns = 'repeat(' + Math.min(imgs.length,3) + ',1fr)';
+    for (var j = 0; j < imgs.length; j++) {
+      var s = imgs[j].src || imgs[j];
+      var d = document.createElement('div'); d.style.cssText = 'aspect-ratio:1;border-radius:6px;overflow:hidden;cursor:pointer;background:var(--gray-100);';
+      d.onclick = (function(src) { return function() { closeCardDetail(); setTimeout(function(){ openLightbox([src],0); },150); }; })(s);
+      var e = document.createElement('img'); e.src = s; e.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+      e.onerror = function() { this.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;">❌</div>'; };
+      d.appendChild(e); ic.appendChild(d);
     }
-  } else {
-    ic.style.display = 'none';
-  }
-  var ac = document.getElementById('detailActions');
-  ac.innerHTML = '';
+  } else { ic.style.display = 'none'; }
+  var ac = document.getElementById('detailActions'); ac.innerHTML = '';
   if (l.url && l.url !== '#') {
-    var a = document.createElement('a');
-    a.href = l.url; a.target = '_blank'; a.rel = 'noopener';
-    a.textContent = '🔗 打开链接';
-    a.style.cssText = 'display:block;text-align:center;background:#4f6ef7;color:#fff;padding:10px;border-radius:8px;text-decoration:none;font-size:14px;';
+    var a = document.createElement('a'); a.href = l.url; a.target = '_blank'; a.rel = 'noopener';
+    a.innerHTML = '🔗 打开链接'; a.style.cssText = 'display:block;text-align:center;background:#4f6ef7;color:#fff;padding:10px;border-radius:8px;text-decoration:none;font-size:14px;';
     ac.appendChild(a);
   }
   if (l.attachment && l.attachment.data) {
-    var b = document.createElement('a');
-    b.href = l.attachment.data; b.download = l.attachment.name;
-    b.textContent = '📎 下载附件：' + l.attachment.name;
-    b.style.cssText = 'display:block;text-align:center;background:#22c55e;color:#fff;padding:10px;border-radius:8px;text-decoration:none;font-size:14px;';
+    var b = document.createElement('a'); b.href = l.attachment.data; b.download = l.attachment.name;
+    b.innerHTML = '📎 下载附件：' + l.attachment.name; b.style.cssText = 'display:block;text-align:center;background:#22c55e;color:#fff;padding:10px;border-radius:8px;text-decoration:none;font-size:14px;';
     ac.appendChild(b);
   }
   document.getElementById('cardDetailModal').classList.add('show');
