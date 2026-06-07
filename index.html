@@ -1139,14 +1139,13 @@ async function syncToCloud() {
   } catch(e) { showToast('❌ 同步失败：' + e.message, 'error'); }
 }
 async function loadFromCloud() {
-  if (!cloudConfig || !cloudConfig.token) return false;
   try {
-    const sha = await getGitHubFileSHA(cloudConfig.token);
-    if (!sha) { showToast('ℹ️ 云端暂无数据', 'info'); return false; }
+    const fetchHeaders = { 'Accept': 'application/vnd.github.v3+json' };
+    if (cloudConfig && cloudConfig.token) fetchHeaders['Authorization'] = 'token ' + cloudConfig.token;
     const resp = await fetch('https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + GH_DATA_FILE, {
-      headers: { 'Authorization': 'token ' + cloudConfig.token, 'Accept': 'application/vnd.github.v3+json' },
+      headers: fetchHeaders,
     });
-    if (!resp.ok) throw new Error('加载失败');
+    if (!resp.ok) return false;
     const data = await resp.json();
     const decoded = decodeURIComponent(escape(atob(data.content)));
     const remote = JSON.parse(decoded);
@@ -1155,8 +1154,10 @@ async function loadFromCloud() {
     if (remote.clickCounts) clickCounts = remote.clickCounts;
     if (remote.changelog) saveChangelog(remote.changelog);
     saveData(); saveAnnouncements(); saveClicks();
-    renderLinks(); showToast('☁️ 已从 GitHub 加载数据', 'success'); return true;
-  } catch(e) { showToast('❌ 从云端加载失败：' + e.message, 'error'); }
+    renderLinks();
+    showToast('☁️ 已从 GitHub 加载数据', 'success');
+    return true;
+  } catch(e) { /* 静默失败，降级到本地 */ }
   return false;
 }
 async function testCloudConnection() {
