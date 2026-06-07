@@ -1,8 +1,35 @@
 {
-  "links": [],
+  "links": [
+    {
+      "title": "测试",
+      "url": "",
+      "description": "测试",
+      "type": "日报",
+      "department": "全公司",
+      "tags": [
+        "测试"
+      ],
+      "date": "2026-06-07",
+      "isToday": true,
+      "image": "",
+      "attachment": false,
+      "attachmentName": "",
+      "id": 1780817936447.887
+    }
+  ],
   "announcements": [],
   "clickCounts": {},
   "changelog": [
+    {
+      "time": "2026-06-07 15:38:56",
+      "action": "add",
+      "text": "新增了链接: 测试"
+    },
+    {
+      "time": "2026-06-07 15:38:29",
+      "action": "login",
+      "text": "管理员登录验证成功"
+    },
     {
       "time": "2026-06-07 15:35:23",
       "action": "login",
