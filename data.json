@@ -13,27 +13,21 @@
       "attachment": false,
       "attachmentName": "",
       "id": 1780818341679.8645
-    },
-    {
-      "title": "测试",
-      "url": "",
-      "description": "测试",
-      "type": "日报",
-      "department": "全公司",
-      "tags": [
-        "测试"
-      ],
-      "date": "2026-06-07",
-      "isToday": true,
-      "image": "",
-      "attachment": false,
-      "attachmentName": "",
-      "id": 1780817936447.887
     }
   ],
   "announcements": [],
   "clickCounts": {},
   "changelog": [
+    {
+      "time": "2026-06-07 15:45:58",
+      "action": "delete",
+      "text": "删除了链接: 测试"
+    },
+    {
+      "time": "2026-06-07 15:45:43",
+      "action": "sync",
+      "text": "数据已同步到 GitHub"
+    },
     {
       "time": "2026-06-07 15:45:41",
       "action": "add",
