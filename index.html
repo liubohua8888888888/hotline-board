@@ -667,7 +667,8 @@
   <div class="footer-inner">
     <div class="footer-left">Made by 刘博华 · 热线看板 v2.0</div>
     <div class="footer-right">
-      <button onclick="exportData()">📥 导出数据</button>
+      <button onclick="exportData()" title="导出完整备份（含公告、点击统计、更新记录）">📥 备份(JSON)</button>
+      <button onclick="exportCSV()" title="导出卡片列表（Excel可打开）">📊 导出CSV</button>
       <button onclick="document.getElementById('importFileInput').click()">📤 导入数据</button>
       <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
       <button onclick="openChangelog()">📝 更新记录</button>
@@ -1150,6 +1151,30 @@ function exportData() {
   a.click(); URL.revokeObjectURL(url);
   addChangelog('export', '导出了看板数据备份');
   showToast('📥 数据已导出', 'success');
+}
+function exportCSV() {
+  const BOM = '\uFEFF';
+  const headers = ['序号', '标题', '链接/附件', '描述', '类型', '部门', '标签', '日期', '置顶', '点击量', '创建时间'];
+  let rows = [headers.join(',')];
+  links.forEach((l, idx) => {
+    const title = (l.title || '').replace(/"/g, '""');
+    const linkUrl = l.attachment ? l.url : (l.url || '');
+    const desc = (l.description || '').replace(/"/g, '""');
+    const tags = Array.isArray(l.tags) ? l.tags.join(' ') : (l.tags || '');
+    const date = l.date || '';
+    const isToday = l.isToday ? '是' : '否';
+    const clicks = clickCounts[l.id] || 0;
+    const created = l.id ? new Date(l.id).toLocaleString('zh-CN', {hour12:false}) : '';
+    rows.push([idx+1, '"'+title+'"', '"'+linkUrl+'"', '"'+desc+'"', l.type||'', l.department||'', '"'+tags+'"', date, isToday, clicks, '"'+created+'"'].join(','));
+  });
+  const csvContent = BOM + rows.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '热线看板卡片列表_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click(); URL.revokeObjectURL(a.href);
+  addChangelog('export', '导出了卡片列表CSV（共' + links.length + '条）');
+  showToast('📊 CSV已导出（' + links.length + '条卡片）', 'success');
 }
 function importData(e) {
   const file = e.target.files[0]; if (!file) return;
