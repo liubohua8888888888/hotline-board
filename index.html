@@ -648,6 +648,7 @@
       <span style="font-size:14px; font-weight:600; color:var(--primary-dark);">🔧 管理链接 <span class="admin-badge">已认证</span></span>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-ghost btn-sm" onclick="openCloudModal()">☁️ 云同步</button>
+        <button class="btn btn-ghost btn-sm" onclick="openDingModal()">🤖 钉钉通知</button>
         <button class="btn btn-ghost btn-sm" onclick="openChangePwdModal()">🔑 改密码</button>
         <button class="btn btn-ghost btn-sm" onclick="openAnnounceManager()">📢 公告管理</button>
         <button class="btn btn-sm" onclick="openAddModal()" style="background:var(--primary);color:#fff;font-weight:600;">＋ 新增链接</button>
@@ -743,6 +744,34 @@
       <button class="btn btn-ghost" onclick="closeCloudModal()">取消</button>
       <button class="btn btn-ghost" onclick="testCloudConnection()" style="border:1.5px solid var(--border);">🔄 测试连接</button>
       <button class="btn btn-success" onclick="saveCloudConfig()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- DingTalk Notification Modal -->
+<div class="modal-overlay" id="dingModal">
+  <div class="modal">
+    <h2>🤖 钉钉通知设置</h2>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">配置后，每次新增/编辑/删除卡片会自动推送通知到钉钉群。</p>
+    <div class="form-group">
+      <label>Webhook 地址</label>
+      <input type="text" id="dingWebhook" placeholder="https://oapi.dingtalk.com/robot/send?access_token=xxx">
+      <div class="hint">钉钉群 → 群设置 → 智能群助手 → 添加机器人 → 自定义机器人 → 安全设置选「自定义关键词」填「热线看板」</div>
+    </div>
+    <div class="form-group">
+      <label>通知类型</label>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;">
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;"><input type="checkbox" id="dingOnAdd" checked> 新增</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;"><input type="checkbox" id="dingOnEdit" checked> 编辑</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;"><input type="checkbox" id="dingOnDelete" checked> 删除</label>
+      </div>
+    </div>
+    <div class="error-msg" id="dingError"></div>
+    <div class="success-msg" id="dingSuccess"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeDingModal()">取消</button>
+      <button class="btn btn-ghost" onclick="testDingTalk()" style="border:1.5px solid var(--border);">📤 测试发送</button>
+      <button class="btn btn-success" onclick="saveDingConfig()">💾 保存</button>
     </div>
   </div>
 </div>
@@ -1261,7 +1290,7 @@ function clearChangelog() {
 
 // ===== Init =====
 function init() {
-  loadCloudConfig(); initDark(); loadClicks();
+  loadCloudConfig(); initDark(); loadClicks(); loadDingConfig();
   (async () => {
     try {
       await loadFromCloud();
@@ -1366,6 +1395,75 @@ function saveCloudConfig() {
   cloudConfig = { token: apiKey }; saveCloudConfigToLocal(); updateSyncStatus(); closeCloudModal();
   showToast('☁️ 云同步配置已保存，正在同步数据...', 'info');
   setTimeout(() => syncToCloud(), 500);
+}
+
+// ===== DingTalk Notification =====
+const DING_CONFIG_KEY = 'loomy_ding_config';
+let dingConfig = null;
+function loadDingConfig() { try { const s = localStorage.getItem(DING_CONFIG_KEY); if (s) dingConfig = JSON.parse(s); } catch(e) { dingConfig = null; } return dingConfig; }
+function saveDingConfig() {
+  const webhook = document.getElementById('dingWebhook').value.trim();
+  if (!webhook) { document.getElementById('dingError').textContent = '请输入 Webhook 地址'; document.getElementById('dingError').style.display = 'block'; return; }
+  dingConfig = {
+    webhook: webhook,
+    onAdd: document.getElementById('dingOnAdd').checked,
+    onEdit: document.getElementById('dingOnEdit').checked,
+    onDelete: document.getElementById('dingOnDelete').checked
+  };
+  localStorage.setItem(DING_CONFIG_KEY, JSON.stringify(dingConfig));
+  closeDingModal(); showToast('🤖 钉钉通知配置已保存', 'success');
+  addChangelog('config', '更新了钉钉通知配置');
+}
+function openDingModal() {
+  loadDingConfig();
+  document.getElementById('dingWebhook').value = dingConfig?.webhook || '';
+  document.getElementById('dingOnAdd').checked = dingConfig?.onAdd !== false;
+  document.getElementById('dingOnEdit').checked = dingConfig?.onEdit !== false;
+  document.getElementById('dingOnDelete').checked = dingConfig?.onDelete !== false;
+  document.getElementById('dingError').style.display = 'none';
+  document.getElementById('dingSuccess').style.display = 'none';
+  document.getElementById('dingModal').classList.add('show');
+}
+function closeDingModal() { document.getElementById('dingModal').classList.remove('show'); }
+async function testDingTalk() {
+  const webhook = document.getElementById('dingWebhook').value.trim();
+  const errorEl = document.getElementById('dingError'); const successEl = document.getElementById('dingSuccess');
+  errorEl.style.display = 'none'; successEl.style.display = 'none';
+  if (!webhook) { errorEl.textContent = '请输入 Webhook 地址'; errorEl.style.display = 'block'; return; }
+  try {
+    const resp = await fetch(webhook, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        msgtype: 'markdown',
+        markdown: { title: '热线看板测试通知', text: '### 📢 热线看板测试通知\n> 钉钉通知配置成功！\n> 后续卡片更新将自动推送到本群。\n\n**Made by 刘博华**' }
+      })
+    });
+    const result = await resp.json();
+    if (result.errcode === 0) { successEl.textContent = '✅ 测试消息发送成功！请查看钉钉群'; successEl.style.display = 'block'; }
+    else { errorEl.textContent = '❌ 发送失败: ' + (result.errmsg || '未知错误'); errorEl.style.display = 'block'; }
+  } catch(e) { errorEl.textContent = '❌ 网络错误: ' + e.message; errorEl.style.display = 'block'; }
+}
+function sendDingTalk(action, linkData) {
+  if (!dingConfig || !dingConfig.webhook) return;
+  if (action === 'add' && !dingConfig.onAdd) return;
+  if (action === 'edit' && !dingConfig.onEdit) return;
+  if (action === 'delete' && !dingConfig.onDelete) return;
+  const actionMap = { add: '新增', edit: '编辑', delete: '删除' };
+  const emojiMap = { add: '➕', edit: '✏️', delete: '🗑️' };
+  const title = linkData?.title || '未知';
+  const dept = linkData?.department || '-';
+  const type = linkData?.type || '-';
+  const desc = (linkData?.description || '-').substring(0, 100);
+  const date = linkData?.date || getTodayStr().split(' ')[0];
+  const vis = linkData?.visibility === 'supervisor' ? '👔 仅主管' : '👥 全员';
+  const time = getTimeStr();
+  const text = `### ${emojiMap[action]} [热线看板] ${actionMap[action]}了卡片\n\n> **${title}**\n> \n> - **类型：** ${type}\n> - **部门：** ${dept}\n> - **日期：** ${date}\n> - **可见：** ${vis}\n> - **描述：** ${desc}\n> \n> ⏰ ${time}\n\n**Made by 刘博华**`;
+  fetch(dingConfig.webhook, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ msgtype: 'markdown', markdown: { title: '[热线看板] ' + actionMap[action] + '卡片', text: text } })
+  }).catch(e => { /* 静默失败 */ });
 }
 
 // ===== Change Password =====
@@ -1746,11 +1844,13 @@ async function saveLink(e) {
     if (idx !== -1) links[idx] = { ...links[idx], ...data };
     showToast('✅ 链接已更新', 'success');
     addChangelog('edit', '编辑了链接: ' + data.title);
+    sendDingTalk('edit', data);
   } else {
     data.id = Date.now() + Math.random();
     links.unshift(data);
     showToast('✅ 链接已添加', 'success');
     addChangelog('add', '新增了链接: ' + data.title);
+    sendDingTalk('add', data);
   }
   saveData(); closeLinkModal(); renderLinks();
   if (cloudConfig && cloudConfig.token) { await syncToCloud(); }
@@ -1762,6 +1862,7 @@ async function deleteLink(id) {
   links = links.filter(l => l.id != id);
   saveData(); renderLinks(); showToast('🗑️ 链接已删除', 'info');
   addChangelog('delete', '删除了链接: ' + (l ? l.title : '未知'));
+  sendDingTalk('delete', l);
   if (cloudConfig && cloudConfig.token) { await syncToCloud(); }
 }
 
@@ -1961,6 +2062,7 @@ function toggleAnnounceEnabled(id) {
 // ===== Modal close events =====
 document.getElementById('pwdModal').addEventListener('click', function(e) { if (e.target === this) closePwdModal(); });
 document.getElementById('cloudModal').addEventListener('click', function(e) { if (e.target === this) closeCloudModal(); });
+document.getElementById('dingModal').addEventListener('click', function(e) { if (e.target === this) closeDingModal(); });
 document.getElementById('changePwdModal').addEventListener('click', function(e) { if (e.target === this) closeChangePwdModal(); });
 document.getElementById('linkModal').addEventListener('click', function(e) { if (e.target === this) closeLinkModal(); });
 document.getElementById('announceManagerModal').addEventListener('click', function(e) { if (e.target === this) closeAnnounceManager(); });
