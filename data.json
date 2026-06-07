@@ -30,7 +30,8 @@
       "image": "",
       "attachment": false,
       "attachmentName": "",
-      "id": 1780818341679.8645
+      "id": 1780818341679.8645,
+      "visibility": "supervisor"
     }
   ],
   "announcements": [],
@@ -38,6 +39,16 @@
     "1780818341679.8645": 1
   },
   "changelog": [
+    {
+      "time": "2026-06-07 16:55:51",
+      "action": "edit",
+      "text": "编辑了链接: 热线值班主管工作梳理表"
+    },
+    {
+      "time": "2026-06-07 16:20:39",
+      "action": "sync",
+      "text": "数据已同步到 GitHub"
+    },
     {
       "time": "2026-06-07 16:19:08",
       "action": "login",
