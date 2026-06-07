@@ -1264,7 +1264,8 @@ function init() {
   loadCloudConfig(); initDark(); loadClicks();
   (async () => {
     try {
-      if (cloudConfig && cloudConfig.token) { await loadFromCloud(); } else { loadData(); }
+      await loadFromCloud();
+      if (!links || links.length === 0) loadData();
       loadAnnouncements();
     } catch(e) { loadData(); loadAnnouncements(); }
     updateSyncStatus();
