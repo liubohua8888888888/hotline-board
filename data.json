@@ -5,7 +5,7 @@
       "url": "https://www.kdocs.cn/l/cc3RrnRgfI6c",
       "description": "客服一线主管工作手册信息",
       "type": "项目文档",
-      "department": "客服部",
+      "department": "客户体验中心",
       "tags": [
         "热线主管"
       ],
@@ -40,6 +40,16 @@
     "1780818341679.8645": 1
   },
   "changelog": [
+    {
+      "time": "2026-06-07 17:42:55",
+      "action": "edit",
+      "text": "编辑了链接: 客服一线主管工作手册"
+    },
+    {
+      "time": "2026-06-07 17:42:48",
+      "action": "sync",
+      "text": "数据已同步到 GitHub"
+    },
     {
       "time": "2026-06-07 17:42:47",
       "action": "edit",
