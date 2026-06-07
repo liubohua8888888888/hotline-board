@@ -470,6 +470,52 @@
   .cl-action.login { background: #fce7f3; color: #9d174d; }
   .changelog-item .cl-text { font-size: 13px; color: var(--text); line-height: 1.4; }
 
+  /* ===== Detail Modal ===== */
+  .detail-modal {
+    background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+    width: 100%; max-width: 600px; max-height: 85vh; overflow-y: auto;
+    animation: modalIn 0.25s ease; position: relative;
+  }
+  .detail-modal-header {
+    background: linear-gradient(135deg, #4f6ef7 0%, #6366f1 60%, #818cf8 100%);
+    color: #fff; padding: 28px 28px 22px; border-radius: var(--radius) var(--radius) 0 0;
+  }
+  body.dark .detail-modal-header { background: linear-gradient(135deg, #312e81 0%, #3730a3 60%, #4338ca 100%); }
+  .detail-modal-header h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .detail-modal-header .detail-meta-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .detail-modal-header .detail-meta-item {
+    font-size: 12px; padding: 3px 10px; border-radius: 12px;
+    background: rgba(255,255,255,0.18); backdrop-filter: blur(4px); display: flex; align-items: center; gap: 4px;
+  }
+  .detail-modal-header .detail-close {
+    position: absolute; top: 16px; right: 16px;
+    background: rgba(255,255,255,0.2); border: none; color: #fff;
+    width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+    font-size: 16px; display: flex; align-items: center; justify-content: center;
+    transition: var(--transition);
+  }
+  .detail-modal-header .detail-close:hover { background: rgba(255,255,255,0.35); }
+  .detail-modal-body { padding: 24px 28px; }
+  .detail-modal-body .detail-desc { font-size: 15px; line-height: 1.75; color: var(--text-secondary); margin-bottom: 20px; }
+  .detail-modal-body .detail-image {
+    border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 20px; cursor: pointer;
+  }
+  .detail-modal-body .detail-image img { width: 100%; display: block; transition: var(--transition); }
+  .detail-modal-body .detail-image:hover img { transform: scale(1.02); }
+  .detail-modal-body .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+  .detail-modal-body .detail-tags .mini-tag { font-size: 12px; padding: 4px 12px; border-radius: var(--radius-xs); }
+  .detail-modal-body .detail-stats {
+    display: flex; gap: 20px; padding: 14px 0; border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border); margin-bottom: 20px;
+  }
+  .detail-modal-body .detail-stat { text-align: center; }
+  .detail-modal-body .detail-stat-val { font-size: 20px; font-weight: 700; color: var(--primary); }
+  .detail-modal-body .detail-stat-label { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+  .detail-modal-footer {
+    padding: 16px 28px 22px; display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .detail-modal-footer .btn { padding: 10px 20px; font-size: 13.5px; }
+
   /* ===== Responsive ===== */
   @media (max-width: 768px) {
     .header { padding: 18px 16px 16px; }
@@ -887,6 +933,35 @@
       <button class="btn btn-ghost" onclick="clearChangelog()" style="color:var(--danger);">清空记录</button>
       <button class="btn btn-ghost" onclick="closeChangelog()">关闭</button>
     </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="detail-modal">
+    <div class="detail-modal-header">
+      <h2 id="detailTitle"></h2>
+      <div class="detail-meta-row">
+        <span class="detail-meta-item" id="detailType"></span>
+        <span class="detail-meta-item" id="detailDept"></span>
+        <span class="detail-meta-item" id="detailDate"></span>
+        <span class="detail-meta-item" id="detailToday" style="display:none;">🆕 今日更新</span>
+      </div>
+      <button class="detail-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="detail-modal-body">
+      <p class="detail-desc" id="detailDesc"></p>
+      <div class="detail-image" id="detailImageWrap" style="display:none;">
+        <img id="detailImage" src="" alt="配图" onerror="this.parentElement.style.display='none'">
+      </div>
+      <div class="detail-tags" id="detailTags"></div>
+      <div class="detail-stats">
+        <div class="detail-stat"><div class="detail-stat-val" id="detailClicks">0</div><div class="detail-stat-label">点击次数</div></div>
+        <div class="detail-stat"><div class="detail-stat-val" id="detailDays">0</div><div class="detail-stat-label">发布天数</div></div>
+      </div>
+      <div id="detailAttachInfo" style="display:none;"><span style="font-size:12px;color:var(--text-muted);">📎 附件：</span><span id="detailAttachName" style="font-size:13px;color:var(--primary);"></span></div>
+    </div>
+    <div class="detail-modal-footer" id="detailFooter"></div>
   </div>
 </div>
 
@@ -1417,9 +1492,9 @@ function buildCard(l) {
   if (l.image) {
     imageHtml = '<div class="card-image-wrap" onclick="openLightbox(\'' + l.image.replace(/'/g, "\\'") + '\')"><img src="' + l.image + '" alt="' + l.title + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=img-placeholder><span style=font-size:28px>🖼️</span>图片加载失败</div>\'"></div>';
   }
-  const adminActions = adminMode ? '<div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-ghost btn-sm admin-edit" data-id="' + l.id + '">✏️</button><button class="btn btn-danger btn-sm admin-delete" data-id="' + l.id + '">🗑️</button></div>' : '';
+  const adminActions = adminMode ? '<div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();"><button class="btn btn-ghost btn-sm admin-edit" data-id="' + l.id + '">✏️</button><button class="btn btn-danger btn-sm admin-delete" data-id="' + l.id + '">🗑️</button></div>' : '';
 
-  return '<div class="link-card ' + todayClass + '">' + todayBadge +
+  return '<div class="link-card ' + todayClass + '" onclick="openDetail(\'' + l.id + '\')" style="cursor:pointer;">' + todayBadge +
     '<div class="link-card-inner">' +
       '<div class="link-card-header"><span class="type-tag type-' + l.type + '">' + l.type + '</span>' + adminActions + '</div>' +
       '<h3>' + l.title + '</h3>' +
@@ -1429,7 +1504,7 @@ function buildCard(l) {
       (clicks > 0 ? '<span class="meta-item"><span class="click-count">👁 ' + clicks + '</span></span>' : '') + '</div>' +
       (tags ? '<div class="tag-list">' + tags + '</div>' : '') +
     '</div>' +
-    '<div class="link-card-actions">' +
+    '<div class="link-card-actions" onclick="event.stopPropagation();">' +
       (isExternal
         ? '<a href="' + linkUrl + '" target="_blank" rel="noopener" class="btn btn-open btn-sm" onclick="trackClick(\'' + l.id + '\')">🔗 ' + (l.attachment ? '下载附件' : '打开链接') + '</a>'
         : '<span style="font-size:12px;color:var(--text-muted);padding:6px 0;">（演示链接）</span>') +
@@ -1438,6 +1513,56 @@ function buildCard(l) {
     '</div>' +
   '</div>';
 }
+
+// ===== Detail =====
+function openDetail(id) {
+  const l = links.find(x => x.id == id); if (!l) return;
+  const isToday = l.isToday || l.date === getTodayStr().split(' ')[0];
+  const linkUrl = l.url && l.url !== '#' ? l.url : '#';
+  const isExternal = linkUrl !== '#' && (linkUrl.startsWith('http') || linkUrl.startsWith('//'));
+
+  document.getElementById('detailTitle').textContent = l.title;
+  document.getElementById('detailType').textContent = getTypeIcon(l.type) + ' ' + l.type;
+  document.getElementById('detailDept').textContent = '🏢 ' + l.department;
+  document.getElementById('detailDate').textContent = '📅 ' + l.date;
+  document.getElementById('detailToday').style.display = isToday ? 'flex' : 'none';
+
+  document.getElementById('detailDesc').textContent = l.description || '暂无描述';
+
+  if (l.image) {
+    document.getElementById('detailImage').src = l.image;
+    document.getElementById('detailImageWrap').style.display = 'block';
+    document.getElementById('detailImageWrap').onclick = function() { openLightbox(l.image); };
+  } else { document.getElementById('detailImageWrap').style.display = 'none'; }
+
+  const tagsEl = document.getElementById('detailTags');
+  const tags = l.tags || [];
+  tagsEl.innerHTML = tags.length > 0 ? tags.map(t => '<span class="mini-tag">' + t + '</span>').join('') : '';
+
+  document.getElementById('detailClicks').textContent = getClicks(l.id);
+  const publishDate = new Date(l.date); const now = new Date();
+  document.getElementById('detailDays').textContent = Math.max(0, Math.ceil((now - publishDate) / 86400000));
+
+  if (l.attachment && l.attachmentName) {
+    document.getElementById('detailAttachInfo').style.display = 'block';
+    document.getElementById('detailAttachName').textContent = l.attachmentName;
+  } else { document.getElementById('detailAttachInfo').style.display = 'none'; }
+
+  const footer = document.getElementById('detailFooter');
+  let footerHtml = '';
+  if (isExternal) {
+    footerHtml += '<a href="' + linkUrl + '" target="_blank" rel="noopener" class="btn btn-success" onclick="trackClick(\'' + l.id + '\')">🔗 ' + (l.attachment ? '下载附件' : '打开链接') + '</a>';
+  }
+  footerHtml += '<button class="btn btn-ghost" onclick="copyLink(\'' + encodeURIComponent(linkUrl) + '\', \'' + l.title.replace(/'/g, "\\'") + '\')">📋 复制链接</button>';
+  if (adminMode) {
+    footerHtml += '<button class="btn btn-primary" onclick="closeDetail();openEditModal(\'' + l.id + '\')">✏️ 编辑</button>';
+    footerHtml += '<button class="btn btn-danger" onclick="closeDetail();deleteLink(\'' + l.id + '\')">🗑️ 删除</button>';
+  }
+  footer.innerHTML = footerHtml;
+
+  document.getElementById('detailModal').classList.add('show');
+}
+function closeDetail() { document.getElementById('detailModal').classList.remove('show'); }
 
 // ===== CRUD =====
 function openAddModal() {
@@ -1726,6 +1851,7 @@ document.getElementById('linkModal').addEventListener('click', function(e) { if 
 document.getElementById('announceManagerModal').addEventListener('click', function(e) { if (e.target === this) closeAnnounceManager(); });
 document.getElementById('announceEditModal').addEventListener('click', function(e) { if (e.target === this) closeAnnounceEditModal(); });
 document.getElementById('changelogModal').addEventListener('click', function(e) { if (e.target === this) closeChangelog(); });
+document.getElementById('detailModal').addEventListener('click', function(e) { if (e.target === this) closeDetail(); });
 document.getElementById('announcePopup').addEventListener('click', function(e) {
   if (e.target === this) {
     const a = visiblePopupList[currentPopupIdx]; if (a) setDismissed(a.id, new Date().toISOString());
