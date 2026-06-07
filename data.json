@@ -14,7 +14,8 @@
       "image": "",
       "attachment": false,
       "attachmentName": "",
-      "id": 1780818593143.0833
+      "id": 1780818593143.0833,
+      "visibility": "supervisor"
     },
     {
       "title": "热线值班主管工作梳理表",
@@ -39,6 +40,16 @@
     "1780818341679.8645": 1
   },
   "changelog": [
+    {
+      "time": "2026-06-07 16:55:57",
+      "action": "edit",
+      "text": "编辑了链接: 客服一线主管工作手册"
+    },
+    {
+      "time": "2026-06-07 16:55:53",
+      "action": "sync",
+      "text": "数据已同步到 GitHub"
+    },
     {
       "time": "2026-06-07 16:55:51",
       "action": "edit",
