@@ -707,8 +707,25 @@
         <input type="text" id="inputTitle" placeholder="输入链接标题" required>
       </div>
       <div class="form-group">
-        <label>链接地址 *</label>
-        <input type="url" id="inputUrl" placeholder="https://..." required>
+        <label>链接地址（上传附件后自动填入）</label>
+        <input type="url" id="inputUrl" placeholder="https://... 或 上传附件自动生成">
+      </div>
+      <div class="form-group">
+        <label>附件上传（可选）</label>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <label class="img-upload-btn" style="flex-shrink:0;">
+            📎 选择文件
+            <input type="file" id="inputAttachFile" accept=".pdf,.xlsx,.xls,.doc,.docx,.ppt,.pptx,.csv,.zip,.png,.jpg,.jpeg,.gif,.mp3,.mp4,.txt" style="display:none" onchange="handleAttachSelect(event)">
+          </label>
+          <span id="attachFileName" style="font-size:13px;color:var(--text-muted);">支持 PDF/Excel/Word/PPT/图片/ZIP 等格式，单文件不超过 25MB</span>
+        </div>
+        <div class="img-preview" id="attachPreview" style="margin-top:8px;">
+          <span id="attachIcon" style="font-size:24px;">📄</span>
+          <span class="img-name" id="attachPreviewName">文件名</span>
+          <span style="font-size:11px;color:var(--text-muted);" id="attachPreviewSize"></span>
+          <span class="img-remove" onclick="clearAttach()">✕</span>
+        </div>
+        <div class="hint" id="attachHint" style="display:none;">附件将上传到 GitHub 仓库，保存链接时自动上传</div>
       </div>
       <div class="form-group">
         <label>简要描述</label>
@@ -1201,6 +1218,66 @@ function switchView(view) {
   renderLinks();
 }
 
+// ===== Attachment =====
+let pendingAttachFile = null;
+let pendingAttachName = '';
+let pendingAttachSize = 0;
+
+function handleAttachSelect(e) {
+  const file = e.target.files[0]; if (!file) return;
+  if (file.size > 25 * 1024 * 1024) { showToast('⚠️ 文件超过 25MB 限制', 'error'); e.target.value = ''; return; }
+  pendingAttachFile = file;
+  pendingAttachName = file.name;
+  pendingAttachSize = file.size;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const iconMap = {pdf:'📕',xlsx:'📊',xls:'📊',doc:'📘',docx:'📘',ppt:'📙',pptx:'📙',csv:'📊',zip:'🗜️',png:'🖼️',jpg:'🖼️',jpeg:'🖼️',gif:'🖼️',mp3:'🎵',mp4:'🎬',txt:'📝'};
+  document.getElementById('attachIcon').textContent = iconMap[ext] || '📄';
+  document.getElementById('attachPreviewName').textContent = file.name;
+  document.getElementById('attachPreviewSize').textContent = formatFileSize(file.size);
+  document.getElementById('attachPreview').classList.add('show');
+  document.getElementById('attachFileName').textContent = '已选择文件';
+  document.getElementById('attachHint').style.display = 'block';
+}
+function clearAttach() {
+  pendingAttachFile = null; pendingAttachName = ''; pendingAttachSize = 0;
+  document.getElementById('inputAttachFile').value = '';
+  document.getElementById('attachPreview').classList.remove('show');
+  document.getElementById('attachFileName').textContent = '支持 PDF/Excel/Word/PPT/图片/ZIP 等格式，单文件不超过 25MB';
+  document.getElementById('attachHint').style.display = 'none';
+}
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+}
+async function uploadAttachment(file) {
+  if (!cloudConfig || !cloudConfig.token) { showToast('❌ 请先配置 GitHub 云同步', 'error'); return null; }
+  const token = cloudConfig.token;
+  const date = new Date().toISOString().slice(0, 10);
+  const safeName = file.name.replace(/[^a-zA-Z0-9._\-\u4e00-\u9fa5]/g, '_');
+  const path = 'attachments/' + date + '_' + Date.now() + '_' + safeName;
+  const reader = new FileReader();
+  return new Promise((resolve, reject) => {
+    reader.onload = async function(ev) {
+      const base64 = ev.target.result.split(',')[1];
+      try {
+        const body = { message: '上传附件: ' + file.name, content: base64, branch: GH_BRANCH };
+        const resp = await fetch('https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + path, {
+          method: 'PUT',
+          headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!resp.ok) throw new Error('上传失败: ' + resp.status);
+        const url = 'https://raw.githubusercontent.com/' + GH_OWNER + '/' + GH_REPO + '/' + GH_BRANCH + '/' + path;
+        showToast('📎 附件已上传', 'success');
+        addChangelog('add', '上传了附件: ' + file.name);
+        resolve(url);
+      } catch(err) { showToast('❌ 附件上传失败: ' + err.message, 'error'); reject(err); }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 // ===== Image =====
 function handleImageUpload(e) {
   const file = e.target.files[0]; if (!file) return;
@@ -1354,8 +1431,9 @@ function buildCard(l) {
     '</div>' +
     '<div class="link-card-actions">' +
       (isExternal
-        ? '<a href="' + linkUrl + '" target="_blank" rel="noopener" class="btn btn-open btn-sm" onclick="trackClick(\'' + l.id + '\')">🔗 打开链接</a>'
+        ? '<a href="' + linkUrl + '" target="_blank" rel="noopener" class="btn btn-open btn-sm" onclick="trackClick(\'' + l.id + '\')">🔗 ' + (l.attachment ? '下载附件' : '打开链接') + '</a>'
         : '<span style="font-size:12px;color:var(--text-muted);padding:6px 0;">（演示链接）</span>') +
+      (l.attachment ? '<span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;">📎 ' + escHtml(l.attachmentName || l.url.split('/').pop() || '附件') + '</span>' : '') +
       '<button class="btn btn-ghost btn-sm" onclick="copyLink(\'' + encodeURIComponent(linkUrl) + '\', \'' + l.title.replace(/'/g, "\\'") + '\')">📋 复制</button>' +
     '</div>' +
   '</div>';
@@ -1368,7 +1446,7 @@ function openAddModal() {
   document.getElementById('linkForm').reset();
   document.getElementById('inputDate').value = getTodayStr().split(' ')[0];
   document.getElementById('inputIsToday').checked = true;
-  clearImage(); document.getElementById('linkModal').classList.add('show');
+  clearImage(); clearAttach(); document.getElementById('linkModal').classList.add('show');
 }
 function openEditModal(id) {
   const l = links.find(x => x.id == id); if (!l) return;
@@ -1388,16 +1466,31 @@ function openEditModal(id) {
     document.getElementById('inputImageUrl').value = isDataUrl ? '' : l.image;
     showImagePreview(l.image, isDataUrl ? '已上传图片' : l.image.split('/').pop() || '网络图片');
   } else { clearImage(); }
+  if (l.attachment && l.attachmentName) {
+    document.getElementById('attachIcon').textContent = '📎';
+    document.getElementById('attachPreviewName').textContent = l.attachmentName;
+    document.getElementById('attachPreviewSize').textContent = '';
+    document.getElementById('attachPreview').classList.add('show');
+    document.getElementById('attachFileName').textContent = '已有附件（重新选择将替换）';
+  } else { clearAttach(); }
   document.getElementById('linkModal').classList.add('show');
 }
-function closeLinkModal() { document.getElementById('linkModal').classList.remove('show'); clearImage(); }
+function closeLinkModal() { document.getElementById('linkModal').classList.remove('show'); clearImage(); clearAttach(); }
 
 async function saveLink(e) {
   e.preventDefault();
   const editId = document.getElementById('editId').value;
+  let attachUrl = '';
+  let attachName = '';
+  if (pendingAttachFile) {
+    const saveBtn = document.querySelector('#linkForm button[type="submit"]');
+    const origText = saveBtn.textContent; saveBtn.textContent = '正在上传附件...'; saveBtn.disabled = true;
+    try { attachUrl = await uploadAttachment(pendingAttachFile); attachName = pendingAttachName; } catch(err) { saveBtn.textContent = origText; saveBtn.disabled = false; return; }
+    saveBtn.textContent = origText; saveBtn.disabled = false;
+  }
   const data = {
     title: document.getElementById('inputTitle').value.trim(),
-    url: document.getElementById('inputUrl').value.trim(),
+    url: attachUrl || document.getElementById('inputUrl').value.trim(),
     description: document.getElementById('inputDesc').value.trim(),
     type: document.getElementById('inputType').value,
     department: document.getElementById('inputDept').value,
@@ -1405,6 +1498,8 @@ async function saveLink(e) {
     date: document.getElementById('inputDate').value,
     isToday: document.getElementById('inputIsToday').checked,
     image: pendingImageData || '',
+    attachment: !!attachUrl,
+    attachmentName: attachName,
   };
   if (editId) {
     const idx = links.findIndex(l => l.id == editId);
