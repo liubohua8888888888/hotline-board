@@ -10,245 +10,500 @@
     --primary: #4f6ef7;
     --primary-light: #eef1ff;
     --primary-dark: #3b55d9;
-    --success: #22c55e;
+    --primary-rgb: 79,110,247;
+    --success: #10b981;
     --warning: #f59e0b;
     --danger: #ef4444;
-    --gray-50: #f9fafb;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
-    --gray-400: #9ca3af;
-    --gray-500: #6b7280;
-    --gray-600: #4b5563;
-    --gray-700: #374151;
-    --gray-800: #1f2937;
-    --gray-900: #111827;
-    --radius: 12px;
-    --radius-sm: 8px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
-    --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
-    --transition: all 0.2s ease;
-    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-400: #94a3b8;
+    --gray-500: #64748b;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1e293b;
+    --gray-900: #0f172a;
+    --radius: 14px;
+    --radius-sm: 10px;
+    --radius-xs: 6px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.08);
+    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    --bg: #f8fafc;
+    --bg-card: #fff;
+    --text: #1e293b;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --input-bg: #fff;
+  }
+  body.dark {
+    --gray-50: #0f172a; --gray-100: #1e293b; --gray-200: #334155; --gray-300: #475569;
+    --gray-400: #64748b; --gray-500: #94a3b8; --gray-600: #cbd5e1; --gray-700: #e2e8f0;
+    --gray-800: #f1f5f9; --gray-900: #f8fafc;
+    --bg: #0f172a; --bg-card: #1e293b; --text: #f1f5f9; --text-secondary: #94a3b8;
+    --text-muted: #64748b; --border: #334155; --input-bg: #1e293b;
+    --primary-light: #1e1b4b;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.2); --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.3); --shadow-lg: 0 12px 32px rgba(0,0,0,0.4);
   }
   body {
-    font-family: var(--font);
-    background: var(--gray-50);
-    color: var(--gray-800);
-    min-height: 100vh;
+    font-family: var(--font); background: var(--bg); color: var(--text);
+    min-height: 100vh; -webkit-font-smoothing: antialiased;
+    transition: background 0.3s ease, color 0.3s ease;
   }
+
+  /* ===== Loading ===== */
+  .loading-overlay {
+    position: fixed; inset: 0; background: var(--bg); z-index: 99999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity 0.4s ease;
+  }
+  .loading-overlay.hide { opacity: 0; pointer-events: none; }
+  .loading-spinner {
+    width: 40px; height: 40px; border: 3px solid var(--border);
+    border-top-color: var(--primary); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .loading-text { margin-top: 14px; font-size: 14px; color: var(--text-secondary); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== Header ===== */
   .header {
-    background: linear-gradient(135deg, #4f6ef7 0%, #6c5ce7 50%, #a855f7 100%);
-    color: #fff; padding: 28px 32px 24px;
+    background: linear-gradient(135deg, #4f6ef7 0%, #6366f1 60%, #818cf8 100%);
+    color: #fff; padding: 24px 32px 20px;
     position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 2px 12px rgba(79,110,247,0.3);
+    box-shadow: 0 4px 20px rgba(var(--primary-rgb), 0.18);
   }
+  body.dark .header { background: linear-gradient(135deg, #312e81 0%, #3730a3 60%, #4338ca 100%); }
   .header-inner {
-    max-width: 1400px; margin: 0 auto;
+    max-width: 1440px; margin: 0 auto;
     display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
   }
-  .header-left { display: flex; align-items: center; gap: 16px; }
+  .header-left { display: flex; align-items: center; gap: 14px; }
   .header-icon {
-    width: 44px; height: 44px;
-    background: rgba(255,255,255,0.2); border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; backdrop-filter: blur(4px);
+    width: 42px; height: 42px; background: rgba(255,255,255,0.18); border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center; font-size: 20px; backdrop-filter: blur(4px);
   }
-  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
-  .header p { font-size: 13px; opacity: 0.85; margin-top: 2px; }
-  .header-right { display: flex; align-items: center; gap: 10px; }
+  .header h1 { font-size: 21px; font-weight: 700; letter-spacing: 0.3px; }
+  .header p { font-size: 12.5px; opacity: 0.8; margin-top: 1px; font-weight: 400; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
   .header-date {
-    background: rgba(255,255,255,0.15); padding: 6px 14px;
-    border-radius: 20px; font-size: 13px; backdrop-filter: blur(4px);
+    background: rgba(255,255,255,0.14); padding: 5px 14px;
+    border-radius: 20px; font-size: 12.5px; backdrop-filter: blur(4px); font-weight: 400;
   }
   .sync-status {
-    font-size: 12px; padding: 4px 10px; border-radius: 12px;
-    background: rgba(255,255,255,0.12); backdrop-filter: blur(4px);
+    font-size: 11.5px; padding: 4px 10px; border-radius: 12px;
+    background: rgba(255,255,255,0.1); backdrop-filter: blur(4px);
     display: flex; align-items: center; gap: 4px;
   }
-  .sync-status.online { background: rgba(34,197,94,0.25); }
-  .sync-status.offline { background: rgba(239,68,68,0.2); }
+  .sync-status.online { background: rgba(16,185,129,0.22); }
+  .dark-toggle {
+    width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.1); cursor: pointer; display: flex;
+    align-items: center; justify-content: center; font-size: 15px;
+    transition: var(--transition); backdrop-filter: blur(4px);
+  }
+  .dark-toggle:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.5); }
+
+  /* ===== Buttons ===== */
   .btn {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 18px; border: none; border-radius: var(--radius-sm);
-    font-size: 14px; font-weight: 500; cursor: pointer;
-    font-family: var(--font); transition: var(--transition); text-decoration: none;
+    padding: 8px 16px; border: none; border-radius: var(--radius-xs);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    font-family: var(--font); transition: var(--transition); text-decoration: none; white-space: nowrap;
   }
   .btn-primary { background: #fff; color: var(--primary); }
-  .btn-primary:hover { background: var(--gray-100); transform: translateY(-1px); }
-  .btn-outline { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.4); }
-  .btn-outline:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.7); }
-  .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+  .btn-primary:hover { background: var(--gray-100); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .btn-outline { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.35); }
+  .btn-outline:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.6); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: var(--radius-xs); }
   .btn-success { background: var(--success); color: #fff; }
-  .btn-success:hover { background: #16a34a; }
+  .btn-success:hover { background: #059669; }
   .btn-danger { background: var(--danger); color: #fff; }
   .btn-danger:hover { background: #dc2626; }
-  .btn-ghost { background: transparent; color: var(--gray-600); }
-  .btn-ghost:hover { background: var(--gray-100); }
-  .btn-link { background: transparent; color: var(--primary); padding: 0; font-size: 13px; }
-  .btn-link:hover { text-decoration: underline; }
+  .btn-ghost { background: transparent; color: var(--text-secondary); }
+  .btn-ghost:hover { background: var(--gray-100); color: var(--text); }
 
-  .stats-bar { max-width: 1400px; margin: -14px auto 0; padding: 0 24px; position: relative; z-index: 10; }
-  .stats-inner { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-lg); display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px; overflow: hidden; }
-  .stats-inner > .stat-item { padding: 18px 20px; text-align: center; }
-  .stat-item:not(:last-child) { border-right: 1px solid var(--gray-100); }
-  .stat-number { font-size: 24px; font-weight: 700; color: var(--primary); }
-  .stat-label { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+  /* ===== Stats ===== */
+  .stats-bar { max-width: 1440px; margin: -12px auto 0; padding: 0 32px; position: relative; z-index: 10; }
+  .stats-inner {
+    background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+    display: grid; grid-template-columns: repeat(4, 1fr); overflow: hidden;
+  }
+  .stat-item { padding: 20px 16px; text-align: center; transition: var(--transition); }
+  .stat-item:not(:last-child) { border-right: 1px solid var(--border); }
+  .stat-item:hover { background: var(--gray-50); }
+  .stat-number { font-size: 28px; font-weight: 800; color: var(--primary); line-height: 1.1; }
+  .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-weight: 500; letter-spacing: 0.5px; }
 
-  .main { max-width: 1400px; margin: 0 auto; padding: 20px 24px 40px; }
-  .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
-  .search-box { flex: 1; min-width: 220px; position: relative; }
+  /* ===== Main ===== */
+  .main { max-width: 1440px; margin: 0 auto; padding: 24px 32px 48px; }
+
+  /* ===== Toolbar ===== */
+  .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+  .search-box { flex: 1; min-width: 240px; position: relative; }
   .search-box input {
-    width: 100%; padding: 10px 16px 10px 40px;
-    border: 2px solid var(--gray-200); border-radius: var(--radius-sm);
-    font-size: 14px; font-family: var(--font); background: #fff; transition: var(--transition); outline: none;
+    width: 100%; padding: 10px 16px 10px 42px;
+    border: 2px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 14px; font-family: var(--font); background: var(--input-bg);
+    transition: var(--transition); outline: none; color: var(--text);
   }
-  .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,110,247,0.12); }
-  .search-box .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-400); font-size: 16px; }
-  .filter-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .search-box input::placeholder { color: var(--text-muted); }
+  .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.1); }
+  .search-box .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 15px; }
+  .filter-group { display: flex; flex-wrap: wrap; gap: 6px; }
   .filter-chip {
-    padding: 6px 14px; border-radius: 20px; font-size: 13px; cursor: pointer;
-    transition: var(--transition); border: 1.5px solid var(--gray-200); background: #fff;
-    color: var(--gray-600); user-select: none; font-family: var(--font);
+    padding: 6px 14px; border-radius: 20px; font-size: 12.5px; cursor: pointer;
+    transition: var(--transition); border: 1.5px solid var(--border); background: var(--bg-card);
+    color: var(--text-secondary); user-select: none; font-family: var(--font); font-weight: 500;
   }
-  .filter-chip:hover { border-color: var(--primary); color: var(--primary); }
-  .filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .filter-chip:hover { border-color: rgba(var(--primary-rgb), 0.4); color: var(--primary); }
+  .filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.25); }
+  .result-count { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
 
-  .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
+  /* ===== Nav Tabs ===== */
+  .nav-tabs {
+    display: flex; gap: 2px; margin-bottom: 20px;
+    background: var(--gray-100); padding: 3px; border-radius: var(--radius-sm);
+    width: fit-content; flex-wrap: wrap;
+  }
+  .nav-tab {
+    padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: var(--transition); border: none;
+    background: transparent; color: var(--text-secondary); font-family: var(--font);
+  }
+  .nav-tab.active { background: var(--bg-card); color: var(--primary); box-shadow: var(--shadow-sm); font-weight: 600; }
+  .nav-tab:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.5); }
+  body.dark .nav-tab:hover:not(.active) { background: rgba(255,255,255,0.08); }
+
+  /* ===== Cards Grid ===== */
+  .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+
+  /* ===== Card ===== */
   .link-card {
-    background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
-    padding: 20px; transition: var(--transition); border: 1px solid transparent;
-    position: relative; cursor: default; display: flex; flex-direction: column;
+    background: var(--bg-card); border-radius: var(--radius);
+    box-shadow: var(--shadow-sm); padding: 0;
+    transition: var(--transition); border: 1px solid var(--border);
+    position: relative; cursor: default; display: flex; flex-direction: column; overflow: hidden;
   }
-  .link-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-color: var(--gray-200); transform: translateY(-2px); }
-  .link-card.today { border-color: var(--primary); background: linear-gradient(135deg, #fff 0%, var(--primary-light) 100%); }
+  .link-card:hover { box-shadow: var(--shadow-md); border-color: var(--gray-300); transform: translateY(-3px); }
+  .link-card.today { border-color: rgba(var(--primary-rgb), 0.35); }
+  .link-card.today::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--primary), #818cf8); z-index: 1;
+  }
   .link-card .today-badge {
-    position: absolute; top: -8px; right: 16px; background: var(--primary); color: #fff;
-    font-size: 11px; padding: 2px 10px; border-radius: 10px; font-weight: 600;
-    box-shadow: 0 2px 6px rgba(79,110,247,0.3);
+    position: absolute; top: 12px; right: 14px;
+    background: var(--primary); color: #fff;
+    font-size: 10.5px; padding: 2px 10px; border-radius: 10px;
+    font-weight: 600; z-index: 2; box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
   }
-  .link-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-  .link-card-header .type-tag { font-size: 11px; padding: 2px 10px; border-radius: 10px; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
-  .type-tag.type-日报 { background: #dbeafe; color: #1d4ed8; }
+  .link-card-inner { padding: 18px 20px 16px; display: flex; flex-direction: column; flex: 1; }
+  .link-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .type-tag {
+    font-size: 11px; padding: 3px 10px; border-radius: 6px;
+    font-weight: 600; white-space: nowrap; flex-shrink: 0; letter-spacing: 0.3px;
+  }
+  .type-tag.type-日报 { background: #dbeafe; color: #1e40af; }
   .type-tag.type-周报 { background: #dcfce7; color: #15803d; }
-  .type-tag.type-公告 { background: #fef3c7; color: #b45309; }
-  .type-tag.type-通知 { background: #fce7f3; color: #be185d; }
-  .type-tag.type-项目文档 { background: #ede9fe; color: #6d28d9; }
-  .type-tag.type-其他 { background: var(--gray-100); color: var(--gray-600); }
-  .link-card h3 { font-size: 15px; font-weight: 600; color: var(--gray-800); margin: 8px 0 4px; line-height: 1.4; }
-  .link-card .desc { font-size: 13px; color: var(--gray-500); line-height: 1.5; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .type-tag.type-公告 { background: #fef3c7; color: #92400e; }
+  .type-tag.type-通知 { background: #fce7f3; color: #9d174d; }
+  .type-tag.type-项目文档 { background: #ede9fe; color: #5b21b6; }
+  .type-tag.type-其他 { background: var(--gray-100); color: var(--text-secondary); }
+  body.dark .type-tag.type-日报 { background: #1e3a5f; color: #93c5fd; }
+  body.dark .type-tag.type-周报 { background: #14532d; color: #86efac; }
+  body.dark .type-tag.type-公告 { background: #451a03; color: #fcd34d; }
+  body.dark .type-tag.type-通知 { background: #500724; color: #f9a8d4; }
+  body.dark .type-tag.type-项目文档 { background: #2e1065; color: #c4b5fd; }
+
+  .link-card h3 { font-size: 15.5px; font-weight: 700; color: var(--text); margin: 10px 0 5px; line-height: 1.45; }
+  .link-card .desc {
+    font-size: 13px; color: var(--text-secondary); line-height: 1.55; margin-bottom: 12px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
   .link-card .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .meta-item { font-size: 12px; color: var(--gray-400); display: flex; align-items: center; gap: 4px; }
-  .meta-item .dept-tag { background: var(--gray-100); padding: 1px 8px; border-radius: 4px; color: var(--gray-600); }
-  .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-  .mini-tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: var(--gray-100); color: var(--gray-600); }
+  .meta-item { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  .meta-item .dept-tag {
+    background: var(--gray-100); padding: 2px 8px; border-radius: 4px;
+    color: var(--text-secondary); font-weight: 500;
+  }
+  .meta-item .click-count { color: var(--primary); font-weight: 600; }
+  .tag-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; }
+  .mini-tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: var(--gray-50); color: var(--text-secondary); border: 1px solid var(--border); }
   .card-image-wrap {
-    margin: 10px 0; border-radius: 8px; overflow: hidden; cursor: pointer;
+    margin: 0 20px 12px; border-radius: 8px; overflow: hidden; cursor: pointer;
     position: relative; background: var(--gray-100); aspect-ratio: 16/9;
     display: flex; align-items: center; justify-content: center;
   }
   .card-image-wrap img { width: 100%; height: 100%; object-fit: cover; transition: var(--transition); }
   .card-image-wrap:hover img { transform: scale(1.03); }
-  .card-image-wrap .img-placeholder { color: var(--gray-400); font-size: 13px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .card-image-wrap .img-placeholder .icon { font-size: 28px; }
-  .link-card-actions { display: flex; gap: 8px; margin-top: auto; border-top: 1px solid var(--gray-100); padding-top: 12px; }
-  .link-card-actions .btn { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+  .card-image-wrap .img-placeholder { color: var(--text-muted); font-size: 13px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .link-card-actions {
+    display: flex; gap: 8px; padding: 12px 20px;
+    border-top: 1px solid var(--border); background: var(--gray-50);
+  }
+  body.dark .link-card-actions { background: var(--gray-100); }
+  .link-card-actions .btn { padding: 5px 12px; font-size: 12px; border-radius: var(--radius-xs); }
+  .link-card-actions .btn-open { background: var(--primary); color: #fff; font-weight: 600; }
+  .link-card-actions .btn-open:hover { background: var(--primary-dark); }
 
-  .empty-state { text-align: center; padding: 60px 20px; color: var(--gray-400); }
+  /* ===== Section ===== */
+  .section-title {
+    font-size: 15px; font-weight: 700; color: var(--text);
+    margin-bottom: 14px; margin-top: 28px; display: flex;
+    align-items: center; gap: 8px; letter-spacing: 0.2px;
+  }
+  .section-title:first-child { margin-top: 0; }
+  .section-title .count { font-size: 12px; font-weight: 500; color: var(--text-muted); background: var(--gray-100); padding: 1px 8px; border-radius: 10px; }
+  .group-section { margin-bottom: 8px; }
+
+  /* ===== Sort Bar ===== */
+  .sort-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .sort-bar label { font-size: 12.5px; color: var(--text-muted); font-weight: 500; }
+  .sort-select {
+    padding: 5px 10px; border: 1.5px solid var(--border); border-radius: var(--radius-xs);
+    font-size: 12.5px; font-family: var(--font); background: var(--input-bg);
+    color: var(--text); outline: none; cursor: pointer; transition: var(--transition);
+  }
+  .sort-select:focus { border-color: var(--primary); }
+
+  /* ===== Empty ===== */
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
   .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
   .empty-state p { font-size: 15px; }
 
+  /* ===== Modal ===== */
   .modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.4);
     z-index: 1000; align-items: center; justify-content: center;
-    backdrop-filter: blur(4px); padding: 20px;
+    backdrop-filter: blur(6px); padding: 20px;
   }
   .modal-overlay.show { display: flex; }
   .modal {
-    background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-lg);
-    width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto;
-    padding: 28px; animation: modalIn 0.25s ease;
+    background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+    width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto;
+    padding: 28px; animation: modalIn 0.2s ease;
   }
   .modal-sm { max-width: 400px; }
-  @keyframes modalIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  .modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .modal h2 { font-size: 17px; font-weight: 700; margin-bottom: 20px; color: var(--text); }
   .modal .form-group { margin-bottom: 16px; }
-  .modal label { display: block; font-size: 13px; font-weight: 500; color: var(--gray-700); margin-bottom: 4px; }
+  .modal label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; }
   .modal input, .modal select, .modal textarea {
-    width: 100%; padding: 9px 12px; border: 1.5px solid var(--gray-200);
-    border-radius: 6px; font-size: 14px; font-family: var(--font);
-    transition: var(--transition); outline: none;
+    width: 100%; padding: 9px 12px; border: 1.5px solid var(--border);
+    border-radius: var(--radius-xs); font-size: 14px; font-family: var(--font);
+    transition: var(--transition); outline: none; color: var(--text); background: var(--input-bg);
   }
-  .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,110,247,0.1); }
+  .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.08); }
   .modal textarea { resize: vertical; min-height: 60px; }
   .modal .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .modal .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 1px solid var(--gray-100); padding-top: 16px; }
-  .modal .modal-actions .btn { padding: 9px 20px; }
+  .modal .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; }
   .modal .error-msg { color: var(--danger); font-size: 13px; margin-top: 4px; display: none; }
   .modal .success-msg { color: var(--success); font-size: 13px; margin-top: 4px; display: none; }
-  .modal .hint { font-size: 12px; color: var(--gray-500); margin-top: 4px; }
-
+  .modal .hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
   .img-upload-area { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
   .img-upload-area input[type="text"] { flex: 1; min-width: 160px; }
   .img-upload-btn {
-    padding: 9px 14px; border: 1.5px dashed var(--gray-300); border-radius: 6px;
-    background: var(--gray-50); cursor: pointer; font-size: 13px; color: var(--gray-500);
+    padding: 9px 14px; border: 1.5px dashed var(--gray-300); border-radius: var(--radius-xs);
+    background: var(--gray-50); cursor: pointer; font-size: 13px; color: var(--text-secondary);
     transition: var(--transition); font-family: var(--font); white-space: nowrap;
   }
   .img-upload-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
-  .img-preview { margin-top: 8px; padding: 8px; background: var(--gray-50); border-radius: 6px; display: none; align-items: center; gap: 10px; border: 1px solid var(--gray-200); }
+  .img-preview {
+    margin-top: 8px; padding: 8px; background: var(--gray-50); border-radius: var(--radius-xs);
+    display: none; align-items: center; gap: 10px; border: 1px solid var(--border);
+  }
   .img-preview.show { display: flex; }
   .img-preview img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; }
-  .img-preview .img-name { font-size: 12px; color: var(--gray-500); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .img-preview .img-name { font-size: 12px; color: var(--text-secondary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .img-preview .img-remove { cursor: pointer; color: var(--danger); font-size: 18px; line-height: 1; padding: 0 4px; }
 
+  /* ===== Lightbox ===== */
   .lightbox-overlay {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-    z-index: 2000; align-items: center; justify-content: center;
-    padding: 40px; cursor: zoom-out;
+    z-index: 2000; align-items: center; justify-content: center; padding: 40px; cursor: zoom-out;
   }
   .lightbox-overlay.show { display: flex; }
-  .lightbox-overlay img { max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: lightboxIn 0.3s ease; }
-  @keyframes lightboxIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-  .password-icon { width: 64px; height: 64px; background: linear-gradient(135deg, var(--primary-light), #e0e7ff); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px; }
+  .lightbox-overlay img {
+    max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: lightboxIn 0.25s ease;
+  }
+  @keyframes lightboxIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
+  /* ===== Password ===== */
+  .password-icon {
+    width: 56px; height: 56px; background: var(--primary-light); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 26px;
+  }
+
+  /* ===== Admin ===== */
+  .admin-badge { font-size: 10.5px; background: var(--warning); color: #fff; padding: 2px 8px; border-radius: 8px; font-weight: 600; }
+
+  /* ===== Toast ===== */
+  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    padding: 12px 20px; border-radius: var(--radius-sm); color: #fff;
+    font-size: 13.5px; font-weight: 500; box-shadow: var(--shadow-lg);
+    animation: toastIn 0.3s ease; display: flex; align-items: center; gap: 8px;
+  }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+  .toast.info { background: var(--primary); }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* ===== Announcement Banner ===== */
+  .announce-banner {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    color: #fff; padding: 0; display: none;
+    box-shadow: 0 2px 12px rgba(245,158,11,0.3); animation: bannerSlideDown 0.4s ease;
+  }
+  @keyframes bannerSlideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+  .announce-banner.show { display: block; }
+  .announce-banner-inner { max-width: 1440px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; gap: 12px; }
+  .announce-banner-icon { font-size: 20px; flex-shrink: 0; }
+  .announce-banner-content { flex: 1; font-size: 14px; font-weight: 500; line-height: 1.5; }
+  .announce-banner-content strong { font-weight: 700; }
+  .announce-banner-close {
+    background: rgba(255,255,255,0.2); border: none; color: #fff;
+    width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+    font-size: 14px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: var(--transition);
+  }
+  .announce-banner-close:hover { background: rgba(255,255,255,0.35); }
+  .announce-banner-nav { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .announce-banner-nav button {
+    background: rgba(255,255,255,0.2); border: none; color: #fff;
+    width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+    font-size: 13px; display: flex; align-items: center; justify-content: center; transition: var(--transition);
+  }
+  .announce-banner-nav button:hover { background: rgba(255,255,255,0.35); }
+  .announce-banner-nav .nav-dots { font-size: 11px; padding: 0 4px; opacity: 0.8; }
+  body.has-banner .header { top: 44px; }
+
+  /* ===== Announcement Popup ===== */
+  .announce-popup-overlay {
+    display: none; position: fixed; inset: 0; z-index: 3000;
+    background: rgba(15,23,42,0.45); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .announce-popup-overlay.show { display: flex; }
+  .announce-popup {
+    background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+    width: 100%; max-width: 520px; max-height: 80vh; overflow-y: auto;
+    animation: modalIn 0.3s ease; position: relative;
+  }
+  .announce-popup-header {
+    background: linear-gradient(135deg, #4f6ef7 0%, #6366f1 60%, #818cf8 100%);
+    color: #fff; padding: 24px 28px 20px; border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .announce-popup-header h2 { font-size: 18px; font-weight: 700; }
+  .announce-popup-header .popup-date { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+  .announce-popup-header .popup-close {
+    position: absolute; top: 16px; right: 16px;
+    background: rgba(255,255,255,0.2); border: none; color: #fff;
+    width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+    font-size: 16px; display: flex; align-items: center; justify-content: center; transition: var(--transition);
+  }
+  .announce-popup-header .popup-close:hover { background: rgba(255,255,255,0.35); }
+  .announce-popup-body { padding: 24px 28px; font-size: 14.5px; line-height: 1.7; color: var(--text-secondary); }
+  .announce-popup-body img { max-width: 100%; border-radius: var(--radius-sm); margin: 12px 0; }
+  .announce-popup-footer { padding: 16px 28px 20px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); }
+  .announce-popup-footer .popup-nav { display: flex; gap: 8px; }
+  .announce-popup-footer .popup-nav button {
+    padding: 6px 14px; border-radius: var(--radius-xs); border: 1.5px solid var(--border);
+    background: var(--bg-card); color: var(--text-secondary); cursor: pointer; font-size: 12.5px;
+    font-family: var(--font); transition: var(--transition);
+  }
+  .announce-popup-footer .popup-nav button:hover { border-color: var(--primary); color: var(--primary); }
+  .announce-popup-footer .popup-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+  .announce-popup-footer .popup-page-info { font-size: 12px; color: var(--text-muted); }
+  .announce-popup-footer .popup-dont-show { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  .announce-popup-footer .popup-dont-show input { width: auto; cursor: pointer; }
+
+  /* ===== Footer ===== */
+  .footer {
+    background: var(--bg-card); border-top: 1px solid var(--border);
+    padding: 20px 32px; text-align: center;
+  }
+  .footer-inner { max-width: 1440px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .footer-left { font-size: 12.5px; color: var(--text-muted); }
+  .footer-left a { color: var(--primary); text-decoration: none; }
+  .footer-left a:hover { text-decoration: underline; }
+  .footer-right { display: flex; gap: 16px; }
+  .footer-right button { font-size: 12px; color: var(--text-muted); background: none; border: none; cursor: pointer; font-family: var(--font); transition: var(--transition); }
+  .footer-right button:hover { color: var(--primary); }
+
+  /* ===== Back to Top ===== */
+  .back-to-top {
+    position: fixed; bottom: 28px; left: 28px; z-index: 500;
+    width: 42px; height: 42px; border-radius: 50%;
+    background: var(--primary); color: #fff; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; box-shadow: var(--shadow-md);
+    opacity: 0; transform: translateY(10px); pointer-events: none;
+    transition: var(--transition);
+  }
+  .back-to-top.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .back-to-top:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+  /* ===== Changelog Modal ===== */
+  .changelog-list { max-height: 50vh; overflow-y: auto; }
+  .changelog-item {
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .changelog-item:last-child { border-bottom: none; }
+  .changelog-item .cl-time { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; min-width: 130px; padding-top: 2px; }
+  .changelog-item .cl-action { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; white-space: nowrap; }
+  .cl-action.add { background: #dcfce7; color: #15803d; }
+  .cl-action.edit { background: #dbeafe; color: #1e40af; }
+  .cl-action.delete { background: #fee2e2; color: #991b1b; }
+  .cl-action.sync { background: #f3e8ff; color: #7c3aed; }
+  .cl-action.export { background: #fef3c7; color: #92400e; }
+  .cl-action.import { background: #e0f2fe; color: #075985; }
+  .cl-action.login { background: #fce7f3; color: #9d174d; }
+  .changelog-item .cl-text { font-size: 13px; color: var(--text); line-height: 1.4; }
+
+  /* ===== Responsive ===== */
   @media (max-width: 768px) {
-    .header { padding: 20px 16px 18px; }
+    .header { padding: 18px 16px 16px; }
     .header h1 { font-size: 18px; }
-    .header p { font-size: 12px; }
+    .header p { font-size: 11.5px; }
     .header-date, .sync-status { font-size: 11px; padding: 3px 8px; }
     .main { padding: 16px; }
-    .links-grid { grid-template-columns: 1fr; }
     .stats-bar { padding: 0 16px; }
     .stats-inner { grid-template-columns: repeat(2, 1fr); }
     .stats-inner > .stat-item:nth-child(2) { border-right: none; }
     .toolbar { flex-direction: column; align-items: stretch; }
     .search-box { min-width: auto; }
-    .modal .form-row, .modal .form-row-3 { grid-template-columns: 1fr; }
+    .links-grid { grid-template-columns: 1fr; }
+    .modal .form-row { grid-template-columns: 1fr; }
+    .footer-inner { flex-direction: column; text-align: center; }
+    .footer-right { justify-content: center; }
   }
-  ::-webkit-scrollbar { width: 6px; }
+
+  /* ===== Scrollbar ===== */
+  ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
-
-  .nav-tabs { display: flex; gap: 2px; margin-bottom: 20px; background: var(--gray-100); padding: 3px; border-radius: var(--radius-sm); width: fit-content; flex-wrap: wrap; }
-  .nav-tab { padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: var(--transition); border: none; background: transparent; color: var(--gray-500); font-family: var(--font); }
-  .nav-tab.active { background: #fff; color: var(--primary); box-shadow: var(--shadow); }
-  .nav-tab:hover:not(.active) { color: var(--gray-700); }
-  .section-title { font-size: 16px; font-weight: 600; color: var(--gray-800); margin-bottom: 12px; margin-top: 20px; display: flex; align-items: center; gap: 8px; }
-  .section-title .count { font-size: 12px; font-weight: 400; color: var(--gray-400); }
-  .group-section { margin-bottom: 32px; }
-
-  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-  .toast { padding: 12px 20px; border-radius: var(--radius-sm); color: #fff; font-size: 14px; box-shadow: var(--shadow-lg); animation: toastIn 0.3s ease; display: flex; align-items: center; gap: 8px; }
-  .toast.success { background: var(--success); }
-  .toast.error { background: var(--danger); }
-  .toast.info { background: var(--primary); }
-  @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
-  .admin-badge { font-size: 11px; background: var(--warning); color: #fff; padding: 1px 8px; border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
 </style>
 </head>
 <body>
 
-<!-- ===== Header ===== -->
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">正在加载看板...</div>
+</div>
+
+<!-- Header -->
 <header class="header">
   <div class="header-inner">
     <div class="header-left">
@@ -259,36 +514,74 @@
       </div>
     </div>
     <div class="header-right">
+      <button class="dark-toggle" onclick="toggleDark()" id="darkToggle" title="切换深色模式">🌙</button>
       <span class="sync-status" id="syncStatus">☁️ 本地</span>
-      <span class="header-date" id="headerDate"></span>
+      <span class="header-date" id="headerDate">--</span>
       <button class="btn btn-outline btn-sm" onclick="requestAdmin()" id="adminToggleBtn">🔧 管理</button>
     </div>
   </div>
 </header>
 
-<!-- ===== Stats ===== -->
-<div class="stats-bar">
-  <div class="stats-inner">
-    <div class="stat-item"><div class="stat-number" id="statTotal">0</div><div class="stat-label">全部链接</div></div>
-    <div class="stat-item"><div class="stat-number" id="statToday">0</div><div class="stat-label">今日更新</div></div>
-    <div class="stat-item"><div class="stat-number" id="statTypes">0</div><div class="stat-label">分类数</div></div>
-    <div class="stat-item"><div class="stat-number" id="statDepts">0</div><div class="stat-label">涉及部门</div></div>
+<!-- Announcement Banner -->
+<div class="announce-banner" id="announceBanner">
+  <div class="announce-banner-inner">
+    <span class="announce-banner-icon">📢</span>
+    <div class="announce-banner-content" id="bannerContent"></div>
+    <div class="announce-banner-nav" id="bannerNav" style="display:none;">
+      <button onclick="bannerPrev()">◀</button>
+      <span class="nav-dots" id="bannerDots">1/1</span>
+      <button onclick="bannerNext()">▶</button>
+    </div>
+    <button class="announce-banner-close" onclick="closeBanner()">✕</button>
   </div>
 </div>
 
-<!-- ===== Main ===== -->
+<!-- Announcement Popup -->
+<div class="announce-popup-overlay" id="announcePopup">
+  <div class="announce-popup">
+    <div class="announce-popup-header">
+      <h2 id="popupTitle">公告</h2>
+      <div class="popup-date" id="popupDate"></div>
+      <button class="popup-close" onclick="closePopup()">✕</button>
+    </div>
+    <div class="announce-popup-body" id="popupBody"></div>
+    <div class="announce-popup-footer">
+      <label class="popup-dont-show"><input type="checkbox" id="popupDontShow"> 今日不再弹出</label>
+      <div class="popup-nav">
+        <span class="popup-page-info" id="popupPageInfo">1/1</span>
+        <button id="popupPrevBtn" onclick="popupPrev()">◀ 上一条</button>
+        <button id="popupNextBtn" onclick="popupNext()">下一条 ▶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-item"><div class="stat-number" id="statTotal">-</div><div class="stat-label">全部链接</div></div>
+    <div class="stat-item"><div class="stat-number" id="statToday">-</div><div class="stat-label">今日更新</div></div>
+    <div class="stat-item"><div class="stat-number" id="statTypes">-</div><div class="stat-label">分类数</div></div>
+    <div class="stat-item"><div class="stat-number" id="statDepts">-</div><div class="stat-label">涉及部门</div></div>
+  </div>
+</div>
+
+<!-- Main -->
 <div class="main">
+  <!-- Admin Bar -->
   <div id="adminBar" style="display:none; margin-bottom:16px;">
-    <div style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:var(--radius); padding:14px 18px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;">
-      <span style="font-size:14px; font-weight:500; color:var(--primary-dark);">🔧 管理链接 <span class="admin-badge">已认证</span></span>
+    <div style="background:var(--primary-light); border:1px solid rgba(var(--primary-rgb),0.2); border-radius:var(--radius); padding:14px 18px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;">
+      <span style="font-size:14px; font-weight:600; color:var(--primary-dark);">🔧 管理链接 <span class="admin-badge">已认证</span></span>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-ghost btn-sm" onclick="openCloudModal()">☁️ 云同步</button>
         <button class="btn btn-ghost btn-sm" onclick="openChangePwdModal()">🔑 改密码</button>
-        <button class="btn btn-primary" onclick="openAddModal()" style="background:var(--primary);color:#fff;">＋ 新增链接</button>
+        <button class="btn btn-ghost btn-sm" onclick="openAnnounceManager()">📢 公告管理</button>
+        <button class="btn btn-sm" onclick="openAddModal()" style="background:var(--primary);color:#fff;font-weight:600;">＋ 新增链接</button>
       </div>
     </div>
   </div>
 
+  <!-- View Tabs -->
   <div class="nav-tabs" id="viewTabs">
     <button class="nav-tab active" data-view="type" onclick="switchView('type')">📂 按类型</button>
     <button class="nav-tab" data-view="dept" onclick="switchView('dept')">🏢 按部门</button>
@@ -296,6 +589,7 @@
     <button class="nav-tab" data-view="all" onclick="switchView('all')">📋 全部卡片</button>
   </div>
 
+  <!-- Toolbar -->
   <div class="toolbar">
     <div class="search-box">
       <span class="search-icon">🔍</span>
@@ -304,21 +598,47 @@
     <div class="filter-group" id="filterGroup"></div>
   </div>
 
-  <div id="linksContainer">
-    <div class="empty-state">
-      <div class="empty-icon">📭</div>
-      <p>暂无链接数据</p>
-    </div>
+  <!-- Sort Bar -->
+  <div class="sort-bar">
+    <label>排序：</label>
+    <select class="sort-select" id="sortSelect" onchange="renderLinks()">
+      <option value="default">默认（今日优先）</option>
+      <option value="date-desc">日期 新→旧</option>
+      <option value="date-asc">日期 旧→新</option>
+      <option value="title-asc">标题 A→Z</option>
+      <option value="title-desc">标题 Z→A</option>
+      <option value="clicks-desc">点击量 高→低</option>
+    </select>
+    <span class="result-count" id="resultCount"></span>
   </div>
+
+  <!-- Links Container -->
+  <div id="linksContainer"></div>
 </div>
 
-<!-- ===== Password Modal ===== -->
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-left">Made by 刘博华 · 热线看板 v2.0</div>
+    <div class="footer-right">
+      <button onclick="exportData()">📥 导出数据</button>
+      <button onclick="document.getElementById('importFileInput').click()">📤 导入数据</button>
+      <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
+      <button onclick="openChangelog()">📝 更新记录</button>
+    </div>
+  </div>
+</footer>
+
+<!-- Back to Top -->
+<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">↑</button>
+
+<!-- Password Modal -->
 <div class="modal-overlay" id="pwdModal">
   <div class="modal modal-sm">
     <div style="text-align:center;">
       <div class="password-icon">🔒</div>
       <h2 style="margin-bottom:6px;">管理员验证</h2>
-      <p style="font-size:13px;color:var(--gray-500);margin-bottom:20px;">请输入管理密码</p>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;">请输入管理密码</p>
     </div>
     <div class="form-group">
       <label>管理密码</label>
@@ -327,35 +647,32 @@
     </div>
     <div class="modal-actions" style="justify-content:center;border:none;padding-top:0;">
       <button class="btn btn-ghost" onclick="closePwdModal()">取消</button>
-      <button class="btn btn-primary" onclick="verifyPassword()" style="background:var(--primary);color:#fff;">确认</button>
+      <button class="btn btn-sm" onclick="verifyPassword()" style="background:var(--primary);color:#fff;font-weight:600;">确认</button>
     </div>
   </div>
 </div>
 
-<!-- ===== Cloud Sync Modal ===== -->
+<!-- Cloud Sync Modal -->
 <div class="modal-overlay" id="cloudModal">
   <div class="modal">
     <h2>☁️ GitHub 云同步设置</h2>
-    <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px;">配置后，数据将自动同步到 GitHub 仓库，所有同事共享同一份数据。</p>
-
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">配置后，数据将自动同步到 GitHub 仓库，所有同事共享同一份数据。</p>
     <div class="form-group">
       <label>GitHub Token</label>
       <input type="password" id="cloudApiKey" placeholder="输入 GitHub Personal Access Token">
       <div class="hint">用之前创建的那个 ghp_ 开头的 Token 就行</div>
     </div>
-
     <div class="error-msg" id="cloudError"></div>
     <div class="success-msg" id="cloudSuccess"></div>
-
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeCloudModal()">取消</button>
-      <button class="btn btn-outline" onclick="testCloudConnection()" style="border-color:var(--gray-300);color:var(--gray-600);">🔄 测试连接</button>
+      <button class="btn btn-ghost" onclick="testCloudConnection()" style="border:1.5px solid var(--border);">🔄 测试连接</button>
       <button class="btn btn-success" onclick="saveCloudConfig()">💾 保存</button>
     </div>
   </div>
 </div>
 
-<!-- ===== Change Password Modal ===== -->
+<!-- Change Password Modal -->
 <div class="modal-overlay" id="changePwdModal">
   <div class="modal modal-sm">
     <h2>🔑 修改管理密码</h2>
@@ -379,7 +696,7 @@
   </div>
 </div>
 
-<!-- ===== Link Modal ===== -->
+<!-- Link Modal -->
 <div class="modal-overlay" id="linkModal">
   <div class="modal">
     <h2 id="modalTitle">新增链接</h2>
@@ -461,6 +778,101 @@
   </div>
 </div>
 
+<!-- Announcement Manager Modal -->
+<div class="modal-overlay" id="announceManagerModal">
+  <div class="modal" style="max-width:640px;">
+    <h2>📢 公告管理</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <p style="font-size:13px;color:var(--text-secondary);margin:0;">管理弹窗公告和顶部横幅，支持多条公告轮播。</p>
+      <button class="btn btn-sm" onclick="openAnnounceEditModal()" style="background:var(--primary);color:#fff;font-weight:600;">＋ 新增公告</button>
+    </div>
+    <div id="announceList"></div>
+    <div class="modal-actions" style="border-top:1px solid var(--border);padding-top:16px;margin-top:16px;">
+      <button class="btn btn-ghost" onclick="closeAnnounceManager()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- Announcement Edit Modal -->
+<div class="modal-overlay" id="announceEditModal">
+  <div class="modal">
+    <h2 id="announceEditTitle">新增公告</h2>
+    <form id="announceForm" onsubmit="saveAnnouncement(event)">
+      <input type="hidden" id="announceEditId">
+      <div class="form-group">
+        <label>公告标题 *</label>
+        <input type="text" id="announceInputTitle" placeholder="输入公告标题" required>
+      </div>
+      <div class="form-group">
+        <label>公告内容 *</label>
+        <textarea id="announceInputContent" placeholder="输入公告正文内容..." style="min-height:100px;" required></textarea>
+      </div>
+      <div class="form-group">
+        <label>配图（可选）</label>
+        <div class="img-upload-area">
+          <input type="text" id="announceInputImage" placeholder="粘贴图片链接（URL）">
+          <label class="img-upload-btn">
+            📤 上传
+            <input type="file" id="announceImageFile" accept="image/*" style="display:none" onchange="handleAnnounceImageUpload(event)">
+          </label>
+        </div>
+        <div class="img-preview" id="announceImgPreview">
+          <img id="announcePreviewImg" src="" alt="预览">
+          <span class="img-name" id="announcePreviewName">图片</span>
+          <span class="img-remove" onclick="clearAnnounceImage()">✕</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>展示方式</label>
+          <select id="announceInputMode">
+            <option value="popup">🔔 弹窗（打开页面时弹出）</option>
+            <option value="banner">📌 横幅（页面顶部固定条）</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>显示频次</label>
+          <select id="announceInputFreq">
+            <option value="always">每次打开都显示</option>
+            <option value="hourly">每小时显示一次</option>
+            <option value="daily">每天显示一次</option>
+            <option value="weekly">每周显示一次</option>
+            <option value="once">仅显示一次</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>过期时间（可选）</label>
+          <input type="datetime-local" id="announceInputExpiry">
+          <div class="hint">留空表示永不过期</div>
+        </div>
+        <div class="form-group">
+          <label>排序权重</label>
+          <input type="number" id="announceInputPriority" placeholder="0" value="0" min="0">
+          <div class="hint">数值越大越靠前</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeAnnounceEditModal()">取消</button>
+        <button type="submit" class="btn btn-success">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Changelog Modal -->
+<div class="modal-overlay" id="changelogModal">
+  <div class="modal" style="max-width:620px;">
+    <h2>📝 更新记录</h2>
+    <div class="changelog-list" id="changelogList"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="clearChangelog()" style="color:var(--danger);">清空记录</button>
+      <button class="btn btn-ghost" onclick="closeChangelog()">关闭</button>
+    </div>
+  </div>
+</div>
+
 <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
   <img id="lightboxImg" src="" alt="预览">
 </div>
@@ -472,6 +884,11 @@ const STORAGE_KEY = 'loomy_biz_links_v2';
 const PWD_KEY = 'loomy_admin_pwd';
 const ADMIN_SESSION_KEY = 'loomy_admin_session';
 const CLOUD_CONFIG_KEY = 'loomy_cloud_config';
+const CLICKS_KEY = 'loomy_link_clicks';
+const CHANGELOG_KEY = 'loomy_changelog';
+const DARK_KEY = 'loomy_dark_mode';
+const ANNOUNCE_KEY = 'loomy_announcements';
+const ANNOUNCE_DISMISSED_KEY = 'loomy_announce_dismissed';
 const DEFAULT_PWD = 'admin123';
 
 let links = [];
@@ -480,6 +897,13 @@ let adminMode = false;
 let currentFilter = 'all';
 let pendingImageData = null;
 let cloudConfig = null;
+let clickCounts = {};
+let announcements = [];
+let currentPopupIdx = 0;
+let currentBannerIdx = 0;
+let pendingAnnounceImage = null;
+let visiblePopupList = [];
+let visibleBannerList = [];
 
 const DEFAULT_LINKS = [
   { id: Date.now() - 86400000 * 2, title: '5月27日销售数据日报', url: '#', description: '昨日各团队销售业绩及环比分析', type: '日报', department: '销售部', tags: ['销售数据', '业绩'], date: '2026-05-27', isToday: false, image: '' },
@@ -490,16 +914,58 @@ const DEFAULT_LINKS = [
   { id: Date.now() + 3, title: '全员大会会议纪要', url: '#', description: '5月全员大会主要内容及决议事项', type: '公告', department: '全公司', tags: ['会议', '纪要'], date: '2026-05-28', isToday: false, image: '' },
 ];
 
-// ===== Password =====
-function getStoredPwd() {
-  const p = localStorage.getItem(PWD_KEY);
-  return p || btoa(DEFAULT_PWD);
+// ===== Utility =====
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function stripHtml(s) { const d = document.createElement('div'); d.innerHTML = s; return d.textContent || d.innerText || ''; }
+function getTodayStr() {
+  const d = new Date();
+  const ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
+  return ds + ' ' + weekdays[d.getDay()];
 }
+function getTimeStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + ' '
+    + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0') + ':' + String(d.getSeconds()).padStart(2,'0');
+}
+
+// ===== Password =====
+function getStoredPwd() { const p = localStorage.getItem(PWD_KEY); return p || btoa(DEFAULT_PWD); }
 function setStoredPwd(plain) { localStorage.setItem(PWD_KEY, btoa(plain)); }
 function checkPwd(input) { return btoa(input) === getStoredPwd(); }
 function checkAdminSession() { return sessionStorage.getItem(ADMIN_SESSION_KEY) === '1'; }
 function setAdminSession() { sessionStorage.setItem(ADMIN_SESSION_KEY, '1'); }
 function clearAdminSession() { sessionStorage.removeItem(ADMIN_SESSION_KEY); }
+
+// ===== Click Counts =====
+function loadClicks() { try { clickCounts = JSON.parse(localStorage.getItem(CLICKS_KEY)) || {}; } catch(e) { clickCounts = {}; } }
+function saveClicks() { localStorage.setItem(CLICKS_KEY, JSON.stringify(clickCounts)); }
+function trackClick(id) { clickCounts[id] = (clickCounts[id] || 0) + 1; saveClicks(); }
+function getClicks(id) { return clickCounts[id] || 0; }
+
+// ===== Changelog =====
+function loadChangelog() { try { return JSON.parse(localStorage.getItem(CHANGELOG_KEY)) || []; } catch(e) { return []; } }
+function saveChangelog(log) { localStorage.setItem(CHANGELOG_KEY, JSON.stringify(log)); }
+function addChangelog(action, text) {
+  const log = loadChangelog();
+  log.unshift({ time: getTimeStr(), action: action, text: text });
+  if (log.length > 200) log.length = 200;
+  saveChangelog(log);
+}
+
+// ===== Dark Mode =====
+function initDark() {
+  if (localStorage.getItem(DARK_KEY) === 'true') {
+    document.body.classList.add('dark');
+    document.getElementById('darkToggle').textContent = '☀️';
+  }
+}
+function toggleDark() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  localStorage.setItem(DARK_KEY, isDark);
+  document.getElementById('darkToggle').textContent = isDark ? '☀️' : '🌙';
+}
 
 // ===== GitHub Sync =====
 const GH_OWNER = 'liubohua8888888888';
@@ -507,306 +973,254 @@ const GH_REPO = 'hotline-board';
 const GH_BRANCH = 'main';
 const GH_DATA_FILE = 'data.json';
 
-function loadCloudConfig() {
-  const stored = localStorage.getItem(CLOUD_CONFIG_KEY);
-  if (stored) {
-    try { cloudConfig = JSON.parse(stored); } catch(e) { cloudConfig = null; }
-  }
-  return cloudConfig;
-}
-
-function saveCloudConfigToLocal() {
-  localStorage.setItem(CLOUD_CONFIG_KEY, JSON.stringify(cloudConfig));
-}
-
+function loadCloudConfig() { const stored = localStorage.getItem(CLOUD_CONFIG_KEY); if (stored) { try { cloudConfig = JSON.parse(stored); } catch(e) { cloudConfig = null; } } return cloudConfig; }
+function saveCloudConfigToLocal() { localStorage.setItem(CLOUD_CONFIG_KEY, JSON.stringify(cloudConfig)); }
 function updateSyncStatus() {
   const el = document.getElementById('syncStatus');
-  if (cloudConfig && cloudConfig.token) {
-    el.className = 'sync-status online';
-    el.textContent = '☁️ 已同步';
-  } else {
-    el.className = 'sync-status';
-    el.textContent = '☁️ 本地';
-  }
+  if (cloudConfig && cloudConfig.token) { el.className = 'sync-status online'; el.textContent = '☁️ 已同步'; }
+  else { el.className = 'sync-status'; el.textContent = '☁️ 本地'; }
 }
-
 async function getGitHubFileSHA(token) {
   try {
-    const resp = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_FILE}`, {
-      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
+    const resp = await fetch('https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + GH_DATA_FILE, {
+      headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' },
     });
-    if (resp.ok) {
-      const data = await resp.json();
-      return data.sha;
-    }
-    return null; // File doesn't exist yet
-  } catch(e) {
+    if (resp.ok) { const data = await resp.json(); return data.sha; }
     return null;
-  }
+  } catch(e) { return null; }
 }
-
 async function syncToCloud() {
   if (!cloudConfig || !cloudConfig.token) return;
+  const syncData = { links: links, announcements: announcements, clickCounts: clickCounts, changelog: loadChangelog() };
   const token = cloudConfig.token;
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(links, null, 2))));
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(syncData, null, 2))));
   const sha = await getGitHubFileSHA(token);
-
-  const body = {
-    message: '更新热线看板数据',
-    content: content,
-    branch: GH_BRANCH,
-  };
+  const body = { message: '更新热线看板数据', content: content, branch: GH_BRANCH };
   if (sha) body.sha = sha;
-
   try {
-    const resp = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_FILE}`, {
+    const resp = await fetch('https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + GH_DATA_FILE, {
       method: 'PUT',
-      headers: {
-        'Authorization': `token ${token}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
     if (!resp.ok) throw new Error('同步失败');
+    addChangelog('sync', '数据已同步到 GitHub');
     showToast('☁️ 数据已同步到 GitHub', 'success');
-  } catch(e) {
-    showToast('❌ 同步失败：' + e.message, 'error');
-  }
+  } catch(e) { showToast('❌ 同步失败：' + e.message, 'error'); }
 }
-
 async function loadFromCloud() {
   if (!cloudConfig || !cloudConfig.token) return false;
-  const token = cloudConfig.token;
   try {
-    const sha = await getGitHubFileSHA(token);
+    const sha = await getGitHubFileSHA(cloudConfig.token);
     if (!sha) { showToast('ℹ️ 云端暂无数据', 'info'); return false; }
-    const resp = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_FILE}`, {
-      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
+    const resp = await fetch('https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + GH_DATA_FILE, {
+      headers: { 'Authorization': 'token ' + cloudConfig.token, 'Accept': 'application/vnd.github.v3+json' },
     });
     if (!resp.ok) throw new Error('加载失败');
     const data = await resp.json();
     const decoded = decodeURIComponent(escape(atob(data.content)));
-    const remoteLinks = JSON.parse(decoded);
-    if (Array.isArray(remoteLinks)) {
-      links = remoteLinks;
-      saveData();
-      renderLinks();
-      showToast('☁️ 已从 GitHub 加载数据', 'success');
-      return true;
-    }
-  } catch(e) {
-    showToast('❌ 从云端加载失败：' + e.message, 'error');
-  }
+    const remote = JSON.parse(decoded);
+    if (remote.links) links = remote.links;
+    if (remote.announcements) announcements = remote.announcements;
+    if (remote.clickCounts) clickCounts = remote.clickCounts;
+    if (remote.changelog) saveChangelog(remote.changelog);
+    saveData(); saveAnnouncements(); saveClicks();
+    renderLinks(); showToast('☁️ 已从 GitHub 加载数据', 'success'); return true;
+  } catch(e) { showToast('❌ 从云端加载失败：' + e.message, 'error'); }
   return false;
 }
-
 async function testCloudConnection() {
   const token = document.getElementById('cloudApiKey').value.trim();
-  const errorEl = document.getElementById('cloudError');
-  const successEl = document.getElementById('cloudSuccess');
-  errorEl.style.display = 'none';
-  successEl.style.display = 'none';
-
-  if (!token) {
-    errorEl.textContent = '请输入 GitHub Token';
-    errorEl.style.display = 'block';
-    return;
-  }
-
+  const errorEl = document.getElementById('cloudError'); const successEl = document.getElementById('cloudSuccess');
+  errorEl.style.display = 'none'; successEl.style.display = 'none';
+  if (!token) { errorEl.textContent = '请输入 GitHub Token'; errorEl.style.display = 'block'; return; }
   try {
-    const resp = await fetch('https://api.github.com/user', {
-      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
-    });
-    if (resp.ok) {
-      const user = await resp.json();
-      successEl.textContent = `✅ 连接成功！GitHub 用户：${user.login}，可以保存配置了`;
-      successEl.style.display = 'block';
-    } else {
-      errorEl.textContent = '❌ Token 无效，请检查';
-      errorEl.style.display = 'block';
-    }
-  } catch(e) {
-    errorEl.textContent = '❌ 网络错误：' + e.message;
-    errorEl.style.display = 'block';
+    const resp = await fetch('https://api.github.com/user', { headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' } });
+    if (resp.ok) { const user = await resp.json(); successEl.textContent = '✅ 连接成功！GitHub 用户：' + user.login; successEl.style.display = 'block'; }
+    else { errorEl.textContent = '❌ Token 无效，请检查'; errorEl.style.display = 'block'; }
+  } catch(e) { errorEl.textContent = '❌ 网络错误：' + e.message; errorEl.style.display = 'block'; }
+}
+
+// ===== Data =====
+function loadData() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) { try { links = JSON.parse(stored); } catch(e) { links = JSON.parse(JSON.stringify(DEFAULT_LINKS)); } }
+  else { links = JSON.parse(JSON.stringify(DEFAULT_LINKS)); saveData(); }
+}
+function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(links)); }
+
+// ===== Export / Import =====
+function exportData() {
+  const data = { links, announcements, clickCounts, changelog: loadChangelog(), exportedAt: getTimeStr() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'hotline-board-backup-' + getTodayStr().split(' ')[0] + '.json';
+  a.click(); URL.revokeObjectURL(url);
+  addChangelog('export', '导出了看板数据备份');
+  showToast('📥 数据已导出', 'success');
+}
+function importData(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.links && Array.isArray(data.links)) {
+        if (!confirm('导入将覆盖当前所有数据，确认继续？')) return;
+        links = data.links;
+        if (data.announcements) { announcements = data.announcements; saveAnnouncements(); }
+        if (data.clickCounts) { clickCounts = data.clickCounts; saveClicks(); }
+        if (data.changelog) saveChangelog(data.changelog);
+        saveData(); renderLinks();
+        addChangelog('import', '导入了看板数据备份');
+        showToast('📤 数据导入成功', 'success');
+        if (cloudConfig && cloudConfig.token) syncToCloud();
+      } else { showToast('❌ 文件格式不正确', 'error'); }
+    } catch(err) { showToast('❌ 解析文件失败：' + err.message, 'error'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ===== Changelog UI =====
+function openChangelog() {
+  const log = loadChangelog();
+  const list = document.getElementById('changelogList');
+  if (log.length === 0) { list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);">暂无更新记录</div>'; }
+  else {
+    list.innerHTML = log.map(item => {
+      return '<div class="changelog-item">'
+        + '<span class="cl-time">' + item.time + '</span>'
+        + '<span class="cl-action ' + item.action + '">' + ({add:'新增',edit:'编辑',delete:'删除',sync:'同步',export:'导出',import:'导入',login:'登录'}[item.action]||item.action) + '</span>'
+        + '<span class="cl-text">' + escHtml(item.text) + '</span>'
+        + '</div>';
+    }).join('');
   }
+  document.getElementById('changelogModal').classList.add('show');
+}
+function closeChangelog() { document.getElementById('changelogModal').classList.remove('show'); }
+function clearChangelog() {
+  if (!confirm('确定要清空所有更新记录吗？')) return;
+  saveChangelog([]); openChangelog(); showToast('更新记录已清空', 'info');
 }
 
 // ===== Init =====
 function init() {
-  loadCloudConfig();
-  // Try to load from GitHub first, fallback to local
+  loadCloudConfig(); initDark(); loadClicks();
   (async () => {
-    if (cloudConfig && cloudConfig.token) {
-      await loadFromCloud();
-    } else {
-      loadData();
-    }
+    try {
+      if (cloudConfig && cloudConfig.token) { await loadFromCloud(); } else { loadData(); }
+      loadAnnouncements();
+    } catch(e) { loadData(); loadAnnouncements(); }
     updateSyncStatus();
     document.getElementById('headerDate').textContent = getTodayStr();
     if (checkAdminSession()) {
       adminMode = true;
       document.getElementById('adminBar').style.display = 'block';
       document.getElementById('adminToggleBtn').textContent = '🔓 退出管理';
+      addChangelog('login', '管理员自动登录（session恢复）');
     }
-    renderLinks();
-    setupLightbox();
+    renderLinks(); setupLightbox(); showActiveAnnouncements();
+    // Loading
+    setTimeout(() => { document.getElementById('loadingOverlay').classList.add('hide'); setTimeout(() => document.getElementById('loadingOverlay').style.display = 'none', 400); }, 300);
+    // Back to Top
+    window.addEventListener('scroll', () => {
+      document.getElementById('backToTop').classList.toggle('show', window.scrollY > 400);
+    });
   })();
-}
-
-function loadData() {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    try { links = JSON.parse(stored); } catch(e) { links = JSON.parse(JSON.stringify(DEFAULT_LINKS)); }
-  } else {
-    links = JSON.parse(JSON.stringify(DEFAULT_LINKS));
-    saveData();
-  }
-}
-
-function saveData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(links));
-}
-
-function getTodayStr() {
-  const d = new Date();
-  const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
-  return `${ds} ${weekdays[d.getDay()]}`;
 }
 
 // ===== Admin Auth =====
 function requestAdmin() {
   if (adminMode) {
-    adminMode = false;
-    clearAdminSession();
+    adminMode = false; clearAdminSession();
     document.getElementById('adminBar').style.display = 'none';
     document.getElementById('adminToggleBtn').textContent = '🔧 管理';
-    renderLinks();
-    showToast('已退出管理模式', 'info');
-    return;
+    renderLinks(); showToast('已退出管理模式', 'info'); return;
   }
   document.getElementById('adminPwdInput').value = '';
   document.getElementById('pwdError').style.display = 'none';
   document.getElementById('pwdModal').classList.add('show');
   setTimeout(() => document.getElementById('adminPwdInput').focus(), 100);
 }
-
 function verifyPassword() {
   const input = document.getElementById('adminPwdInput').value;
   if (checkPwd(input)) {
-    adminMode = true;
-    setAdminSession();
+    adminMode = true; setAdminSession();
     document.getElementById('adminBar').style.display = 'block';
     document.getElementById('adminToggleBtn').textContent = '🔓 退出管理';
-    closePwdModal();
-    renderLinks();
-    showToast('✅ 认证成功，已进入管理模式', 'success');
+    closePwdModal(); renderLinks(); showToast('✅ 认证成功，已进入管理模式', 'success');
+    addChangelog('login', '管理员登录验证成功');
   } else {
     document.getElementById('pwdError').style.display = 'block';
     document.getElementById('adminPwdInput').value = '';
     document.getElementById('adminPwdInput').focus();
   }
 }
-
 function closePwdModal() { document.getElementById('pwdModal').classList.remove('show'); }
 
 // ===== Cloud Modal =====
 function openCloudModal() {
   loadCloudConfig();
-  document.getElementById('cloudApiKey').value = cloudConfig?.apiKey || '';
-  document.getElementById('cloudBinId').value = cloudConfig?.binId || '';
+  document.getElementById('cloudApiKey').value = cloudConfig?.token || '';
   document.getElementById('cloudError').style.display = 'none';
   document.getElementById('cloudSuccess').style.display = 'none';
   document.getElementById('cloudModal').classList.add('show');
 }
-
 function closeCloudModal() { document.getElementById('cloudModal').classList.remove('show'); }
-
 function saveCloudConfig() {
   const apiKey = document.getElementById('cloudApiKey').value.trim();
-  if (!apiKey) {
-    document.getElementById('cloudError').textContent = '请输入 GitHub Token';
-    document.getElementById('cloudError').style.display = 'block';
-    return;
-  }
-  cloudConfig = { token: apiKey, binId: '' };
-  saveCloudConfigToLocal();
-  updateSyncStatus();
-  closeCloudModal();
+  if (!apiKey) { document.getElementById('cloudError').textContent = '请输入 GitHub Token'; document.getElementById('cloudError').style.display = 'block'; return; }
+  cloudConfig = { token: apiKey }; saveCloudConfigToLocal(); updateSyncStatus(); closeCloudModal();
   showToast('☁️ 云同步配置已保存，正在同步数据...', 'info');
-
-  // Auto sync to cloud
   setTimeout(() => syncToCloud(), 500);
 }
 
 // ===== Change Password =====
 function openChangePwdModal() {
-  document.getElementById('oldPwdInput').value = '';
-  document.getElementById('newPwdInput').value = '';
-  document.getElementById('confirmPwdInput').value = '';
+  document.getElementById('oldPwdInput').value = ''; document.getElementById('newPwdInput').value = ''; document.getElementById('confirmPwdInput').value = '';
   document.getElementById('changePwdError').style.display = 'none';
   document.getElementById('changePwdModal').classList.add('show');
 }
-
 function closeChangePwdModal() { document.getElementById('changePwdModal').classList.remove('show'); }
-
 function changePassword() {
   const old = document.getElementById('oldPwdInput').value;
   const np = document.getElementById('newPwdInput').value;
   const cf = document.getElementById('confirmPwdInput').value;
-  if (!checkPwd(old)) {
-    document.getElementById('changePwdError').textContent = '当前密码错误';
-    document.getElementById('changePwdError').style.display = 'block'; return;
-  }
-  if (np.length < 4) {
-    document.getElementById('changePwdError').textContent = '新密码至少4位';
-    document.getElementById('changePwdError').style.display = 'block'; return;
-  }
-  if (np !== cf) {
-    document.getElementById('changePwdError').textContent = '两次输入不一致';
-    document.getElementById('changePwdError').style.display = 'block'; return;
-  }
-  setStoredPwd(np);
-  closeChangePwdModal();
-  showToast('🔑 密码修改成功', 'success');
+  if (!checkPwd(old)) { document.getElementById('changePwdError').textContent = '当前密码错误'; document.getElementById('changePwdError').style.display = 'block'; return; }
+  if (np.length < 4) { document.getElementById('changePwdError').textContent = '新密码至少4位'; document.getElementById('changePwdError').style.display = 'block'; return; }
+  if (np !== cf) { document.getElementById('changePwdError').textContent = '两次输入不一致'; document.getElementById('changePwdError').style.display = 'block'; return; }
+  setStoredPwd(np); closeChangePwdModal(); showToast('🔑 密码修改成功', 'success');
 }
 
 // ===== View Switch =====
 function switchView(view) {
   currentView = view;
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.querySelector(`.nav-tab[data-view="${view}"]`).classList.add('active');
+  document.querySelector('.nav-tab[data-view="' + view + '"]').classList.add('active');
   renderLinks();
 }
 
-// ===== Image Handling =====
+// ===== Image =====
 function handleImageUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   if (file.size > 2 * 1024 * 1024) { showToast('⚠️ 图片超过 2MB', 'error'); return; }
   const reader = new FileReader();
   reader.onload = function(ev) { pendingImageData = ev.target.result; showImagePreview(pendingImageData, file.name); };
   reader.readAsDataURL(file);
 }
-
 function previewImageFromUrl() {
   const url = document.getElementById('inputImageUrl').value.trim();
-  if (!url) { if (!pendingImageData || pendingImageData.startsWith('data:')) return; clearImage(); return; }
-  pendingImageData = url;
-  showImagePreview(url, url.split('/').pop() || '网络图片');
+  if (!url) { clearImage(); return; }
+  pendingImageData = url; showImagePreview(url, url.split('/').pop() || '网络图片');
 }
-
 function showImagePreview(src, name) {
-  const preview = document.getElementById('imgPreview');
   document.getElementById('previewImg').src = src;
   document.getElementById('previewImgName').textContent = name || '图片';
-  preview.classList.add('show');
+  document.getElementById('imgPreview').classList.add('show');
 }
-
 function clearImage() {
-  pendingImageData = null;
-  document.getElementById('inputImageUrl').value = '';
+  pendingImageData = null; document.getElementById('inputImageUrl').value = '';
   document.getElementById('inputImageFile').value = '';
   document.getElementById('imgPreview').classList.remove('show');
 }
@@ -831,32 +1245,49 @@ function renderLinks() {
       (l.tags || []).some(t => t.toLowerCase().includes(search))
     );
   }
-  if (currentFilter !== 'all') {
-    filtered = filtered.filter(l => l.type === currentFilter || l.department === currentFilter);
-  }
+  if (currentFilter !== 'all') { filtered = filtered.filter(l => l.type === currentFilter || l.department === currentFilter); }
+
+  // Sort
+  const sortVal = document.getElementById('sortSelect').value;
   filtered.sort((a, b) => {
-    if (a.isToday !== b.isToday) return a.isToday ? -1 : 1;
-    return b.date.localeCompare(a.date);
+    if (sortVal === 'default') {
+      if (a.isToday !== b.isToday) return a.isToday ? -1 : 1;
+      return b.date.localeCompare(a.date);
+    }
+    if (sortVal === 'date-desc') return b.date.localeCompare(a.date);
+    if (sortVal === 'date-asc') return a.date.localeCompare(b.date);
+    if (sortVal === 'title-asc') return a.title.localeCompare(b.title, 'zh');
+    if (sortVal === 'title-desc') return b.title.localeCompare(a.title, 'zh');
+    if (sortVal === 'clicks-desc') return getClicks(b.id) - getClicks(a.id);
+    return 0;
   });
+
+  // Stats
   document.getElementById('statTotal').textContent = links.length;
   document.getElementById('statToday').textContent = links.filter(l => l.isToday).length;
-  const types = new Set(links.map(l => l.type));
-  const depts = new Set(links.map(l => l.department));
-  document.getElementById('statTypes').textContent = types.size;
-  document.getElementById('statDepts').textContent = depts.size;
+  document.getElementById('statTypes').textContent = new Set(links.map(l => l.type)).size;
+  document.getElementById('statDepts').textContent = new Set(links.map(l => l.department)).size;
+
+  // Result count
+  document.getElementById('resultCount').textContent = '共 ' + filtered.length + ' 条结果';
+
   renderFilterChips(filtered);
+
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><p>没有匹配的链接，试试其他关键词吧</p></div>`;
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>没有匹配的链接，试试其他关键词吧</p></div>';
     return;
   }
+
   if (currentView === 'all') {
-    container.innerHTML = `<div class="links-grid">${filtered.map(l => buildCard(l)).join('')}</div>`;
-    return;
+    container.innerHTML = '<div class="links-grid">' + filtered.map(l => buildCard(l)).join('') + '</div>';
+    bindAdminEvents(); return;
   }
+
   let groupLabel;
   if (currentView === 'type') groupLabel = l => l.type;
   else if (currentView === 'dept') groupLabel = l => l.department;
   else if (currentView === 'date') groupLabel = l => l.date;
+
   const groups = {};
   filtered.forEach(l => { const g = groupLabel(l); if (!groups[g]) groups[g] = []; groups[g].push(l); });
   const sortedGroups = Object.entries(groups);
@@ -865,16 +1296,20 @@ function renderLinks() {
     sortedGroups.sort((a, b) => { const ai = order.indexOf(a[0]), bi = order.indexOf(b[0]); return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi); });
   } else if (currentView === 'date') { sortedGroups.sort((a, b) => b[0].localeCompare(a[0])); }
   else { sortedGroups.sort((a, b) => b[1].length - a[1].length); }
+
   let html = '';
   sortedGroups.forEach(([group, items]) => {
     const typeIcon = currentView === 'type' ? getTypeIcon(group) : currentView === 'dept' ? '🏢' : '📅';
-    html += `<div class="group-section"><div class="section-title">${typeIcon} ${group} <span class="count">(${items.length})</span></div><div class="links-grid">${items.map(l => buildCard(l)).join('')}</div></div>`;
+    html += '<div class="group-section"><div class="section-title">' + typeIcon + ' ' + group + ' <span class="count">(' + items.length + ')</span></div><div class="links-grid">' + items.map(l => buildCard(l)).join('') + '</div></div>';
   });
   container.innerHTML = html;
-  if (adminMode) {
-    document.querySelectorAll('.admin-edit').forEach(el => { el.addEventListener('click', () => openEditModal(el.dataset.id)); });
-    document.querySelectorAll('.admin-delete').forEach(el => { el.addEventListener('click', () => deleteLink(el.dataset.id)); });
-  }
+  bindAdminEvents();
+}
+
+function bindAdminEvents() {
+  if (!adminMode) return;
+  document.querySelectorAll('.admin-edit').forEach(el => { el.addEventListener('click', () => openEditModal(el.dataset.id)); });
+  document.querySelectorAll('.admin-delete').forEach(el => { el.addEventListener('click', () => deleteLink(el.dataset.id)); });
 }
 
 function getTypeIcon(type) { const map = { '日报':'📋','周报':'📊','公告':'📢','通知':'📌','项目文档':'📄','其他':'📁' }; return map[type] || '📁'; }
@@ -884,10 +1319,10 @@ function renderFilterChips(filtered) {
   const allDepts = [...new Set(links.map(l => l.department))];
   const allFilters = ['all', ...allTypes, ...allDepts];
   const labels = { 'all': '🏷️ 全部' };
-  allTypes.forEach(t => { labels[t] = `${getTypeIcon(t)} ${t}`; });
-  allDepts.forEach(d => { labels[d] = `🏢 ${d}`; });
+  allTypes.forEach(t => { labels[t] = getTypeIcon(t) + ' ' + t; });
+  allDepts.forEach(d => { labels[d] = '🏢 ' + d; });
   document.getElementById('filterGroup').innerHTML = allFilters.map(f =>
-    `<span class="filter-chip ${currentFilter === f ? 'active' : ''}" onclick="setFilter('${f}')">${labels[f] || f}</span>`
+    '<span class="filter-chip ' + (currentFilter === f ? 'active' : '') + '" onclick="setFilter(\'' + f + '\')">' + (labels[f] || f) + '</span>'
   ).join('');
 }
 
@@ -899,13 +1334,31 @@ function buildCard(l) {
   const todayBadge = isToday ? '<span class="today-badge">🆕 今日</span>' : '';
   const linkUrl = l.url && l.url !== '#' ? l.url : '#';
   const isExternal = linkUrl !== '#' && (linkUrl.startsWith('http') || linkUrl.startsWith('//'));
-  const tags = (l.tags || []).map(t => `<span class="mini-tag">${t}</span>`).join('');
+  const tags = (l.tags || []).map(t => '<span class="mini-tag">' + t + '</span>').join('');
+  const clicks = getClicks(l.id);
   let imageHtml = '';
   if (l.image) {
-    imageHtml = `<div class="card-image-wrap" onclick="openLightbox('${l.image.replace(/'/g, "\\'")}')"><img src="${l.image}" alt="${l.title}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'img-placeholder\\'><span class=\\'icon\\'>🖼️</span>图片加载失败</div>'"></div>`;
+    imageHtml = '<div class="card-image-wrap" onclick="openLightbox(\'' + l.image.replace(/'/g, "\\'") + '\')"><img src="' + l.image + '" alt="' + l.title + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=img-placeholder><span style=font-size:28px>🖼️</span>图片加载失败</div>\'"></div>';
   }
-  const adminActions = adminMode ? `<div class="admin-actions" style="display:flex;gap:6px;flex-shrink:0;"><button class="btn btn-ghost btn-sm admin-edit" data-id="${l.id}">✏️</button><button class="btn btn-danger btn-sm admin-delete" data-id="${l.id}">🗑️</button></div>` : '';
-  return `<div class="link-card ${todayClass}">${todayBadge}<div class="link-card-header"><span class="type-tag type-${l.type}">${l.type}</span>${adminActions}</div><h3>${l.title}</h3>${l.description ? `<p class="desc">${l.description}</p>` : ''}${imageHtml}<div class="meta"><span class="meta-item"><span class="dept-tag">🏢 ${l.department}</span></span><span class="meta-item">📅 ${l.date}</span></div>${tags ? `<div class="tag-list">${tags}</div>` : ''}<div class="link-card-actions">${isExternal ? `<a href="${linkUrl}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">🔗 打开链接</a>` : `<span style="font-size:12px;color:var(--gray-400);padding:6px 0;">（演示链接）</span>`}<button class="btn btn-ghost btn-sm" onclick="copyLink('${encodeURIComponent(linkUrl)}', '${l.title.replace(/'/g, "\\'")}')">📋 复制</button></div></div>`;
+  const adminActions = adminMode ? '<div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-ghost btn-sm admin-edit" data-id="' + l.id + '">✏️</button><button class="btn btn-danger btn-sm admin-delete" data-id="' + l.id + '">🗑️</button></div>' : '';
+
+  return '<div class="link-card ' + todayClass + '">' + todayBadge +
+    '<div class="link-card-inner">' +
+      '<div class="link-card-header"><span class="type-tag type-' + l.type + '">' + l.type + '</span>' + adminActions + '</div>' +
+      '<h3>' + l.title + '</h3>' +
+      (l.description ? '<p class="desc">' + l.description + '</p>' : '') +
+      imageHtml +
+      '<div class="meta"><span class="meta-item"><span class="dept-tag">🏢 ' + l.department + '</span></span><span class="meta-item">📅 ' + l.date + '</span>' +
+      (clicks > 0 ? '<span class="meta-item"><span class="click-count">👁 ' + clicks + '</span></span>' : '') + '</div>' +
+      (tags ? '<div class="tag-list">' + tags + '</div>' : '') +
+    '</div>' +
+    '<div class="link-card-actions">' +
+      (isExternal
+        ? '<a href="' + linkUrl + '" target="_blank" rel="noopener" class="btn btn-open btn-sm" onclick="trackClick(\'' + l.id + '\')">🔗 打开链接</a>'
+        : '<span style="font-size:12px;color:var(--text-muted);padding:6px 0;">（演示链接）</span>') +
+      '<button class="btn btn-ghost btn-sm" onclick="copyLink(\'' + encodeURIComponent(linkUrl) + '\', \'' + l.title.replace(/'/g, "\\'") + '\')">📋 复制</button>' +
+    '</div>' +
+  '</div>';
 }
 
 // ===== CRUD =====
@@ -915,13 +1368,10 @@ function openAddModal() {
   document.getElementById('linkForm').reset();
   document.getElementById('inputDate').value = getTodayStr().split(' ')[0];
   document.getElementById('inputIsToday').checked = true;
-  clearImage();
-  document.getElementById('linkModal').classList.add('show');
+  clearImage(); document.getElementById('linkModal').classList.add('show');
 }
-
 function openEditModal(id) {
-  const l = links.find(x => x.id == id);
-  if (!l) return;
+  const l = links.find(x => x.id == id); if (!l) return;
   document.getElementById('modalTitle').textContent = '编辑链接';
   document.getElementById('editId').value = l.id;
   document.getElementById('inputTitle').value = l.title;
@@ -940,7 +1390,6 @@ function openEditModal(id) {
   } else { clearImage(); }
   document.getElementById('linkModal').classList.add('show');
 }
-
 function closeLinkModal() { document.getElementById('linkModal').classList.remove('show'); clearImage(); }
 
 async function saveLink(e) {
@@ -959,58 +1408,242 @@ async function saveLink(e) {
   };
   if (editId) {
     const idx = links.findIndex(l => l.id == editId);
-    if (idx !== -1) { links[idx] = { ...links[idx], ...data }; }
+    if (idx !== -1) links[idx] = { ...links[idx], ...data };
     showToast('✅ 链接已更新', 'success');
+    addChangelog('edit', '编辑了链接: ' + data.title);
   } else {
     data.id = Date.now() + Math.random();
     links.unshift(data);
     showToast('✅ 链接已添加', 'success');
+    addChangelog('add', '新增了链接: ' + data.title);
   }
-  saveData();
-  closeLinkModal();
-  renderLinks();
-  // Auto sync to cloud
-  if (cloudConfig && cloudConfig.apiKey) {
-    await syncToCloud();
-  }
+  saveData(); closeLinkModal(); renderLinks();
+  if (cloudConfig && cloudConfig.token) { await syncToCloud(); }
 }
 
 async function deleteLink(id) {
   if (!confirm('确定要删除这个链接吗？')) return;
+  const l = links.find(x => x.id == id);
   links = links.filter(l => l.id != id);
-  saveData();
-  renderLinks();
-  showToast('🗑️ 链接已删除', 'info');
-  // Auto sync to cloud
-  if (cloudConfig && cloudConfig.apiKey) {
-    await syncToCloud();
-  }
+  saveData(); renderLinks(); showToast('🗑️ 链接已删除', 'info');
+  addChangelog('delete', '删除了链接: ' + (l ? l.title : '未知'));
+  if (cloudConfig && cloudConfig.token) { await syncToCloud(); }
 }
 
 // ===== Copy =====
 function copyLink(url, title) {
   const decoded = decodeURIComponent(url);
   if (decoded === '#') { showToast('⚠️ 演示链接，无法复制', 'error'); return; }
-  navigator.clipboard.writeText(decoded).then(() => { showToast(`📋 已复制: ${title}`, 'success'); }).catch(() => { showToast('❌ 复制失败', 'error'); });
+  navigator.clipboard.writeText(decoded).then(() => { showToast('📋 已复制: ' + title, 'success'); }).catch(() => { showToast('❌ 复制失败', 'error'); });
 }
 
 // ===== Toast =====
-function showToast(msg, type = 'info') {
+function showToast(msg, type) {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
+  toast.className = 'toast ' + (type || 'info');
   toast.textContent = msg;
   container.appendChild(toast);
   setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
 }
 
-// ===== Close modals =====
+// ===== Announcements =====
+function loadAnnouncements() {
+  const stored = localStorage.getItem(ANNOUNCE_KEY);
+  if (stored) { try { announcements = JSON.parse(stored); } catch(e) { announcements = []; } }
+}
+function saveAnnouncements() { localStorage.setItem(ANNOUNCE_KEY, JSON.stringify(announcements)); }
+function getDismissedMap() { try { return JSON.parse(localStorage.getItem(ANNOUNCE_DISMISSED_KEY)) || {}; } catch(e) { return {}; } }
+function setDismissed(id, ts) { const map = getDismissedMap(); map[id] = ts; localStorage.setItem(ANNOUNCE_DISMISSED_KEY, JSON.stringify(map)); }
+function shouldShow(a) {
+  if (a.enabled === false) return false;
+  if (a.expiry && new Date(a.expiry) < new Date()) return false;
+  const dismissed = getDismissedMap()[a.id];
+  if (!dismissed) return true;
+  const d = new Date(dismissed); const now = new Date();
+  switch(a.frequency) {
+    case 'always': return true;
+    case 'hourly': return (now - d) > 3600000;
+    case 'daily': return now.toDateString() !== d.toDateString();
+    case 'weekly': return (now - d) > 7 * 86400000;
+    case 'once': return false;
+    default: return true;
+  }
+}
+function showActiveAnnouncements() {
+  visiblePopupList = announcements.filter(a => a.mode === 'popup' && shouldShow(a)).sort((a,b) => (b.priority||0) - (a.priority||0));
+  visibleBannerList = announcements.filter(a => a.mode === 'banner' && shouldShow(a)).sort((a,b) => (b.priority||0) - (a.priority||0));
+  if (visibleBannerList.length > 0) showBanner();
+  if (visiblePopupList.length > 0) { setTimeout(() => showPopup(0), 800); }
+}
+function showBanner() {
+  if (visibleBannerList.length === 0) return;
+  currentBannerIdx = 0; renderBanner();
+  const banner = document.getElementById('announceBanner');
+  banner.classList.add('show'); document.body.classList.add('has-banner');
+  document.getElementById('bannerNav').style.display = visibleBannerList.length > 1 ? 'flex' : 'none';
+}
+function renderBanner() {
+  const a = visibleBannerList[currentBannerIdx];
+  document.getElementById('bannerContent').innerHTML = '<strong>' + escHtml(a.title) + '</strong>：' + escHtml(stripHtml(a.content));
+  document.getElementById('bannerDots').textContent = (currentBannerIdx+1) + '/' + visibleBannerList.length;
+}
+function bannerPrev() { currentBannerIdx = (currentBannerIdx - 1 + visibleBannerList.length) % visibleBannerList.length; renderBanner(); }
+function bannerNext() { currentBannerIdx = (currentBannerIdx + 1) % visibleBannerList.length; renderBanner(); }
+function closeBanner() {
+  const a = visibleBannerList[currentBannerIdx]; setDismissed(a.id, new Date().toISOString());
+  document.getElementById('announceBanner').classList.remove('show'); document.body.classList.remove('has-banner');
+  if (visibleBannerList.length > 1) { visibleBannerList.splice(currentBannerIdx, 1); if (visibleBannerList.length > 0) { setTimeout(() => showBanner(), 300); return; } }
+}
+function showPopup(idx) {
+  if (idx >= visiblePopupList.length) return;
+  currentPopupIdx = idx; const a = visiblePopupList[idx];
+  document.getElementById('popupTitle').textContent = a.title;
+  document.getElementById('popupDate').textContent = '📅 ' + (a.date || '');
+  const body = document.getElementById('popupBody');
+  let html = a.content || '';
+  if (a.image) html += '<br><img src="' + a.image + '" alt="配图" onerror="this.style.display=\'none\'">';
+  body.innerHTML = html;
+  document.getElementById('popupPageInfo').textContent = (idx+1) + '/' + visiblePopupList.length;
+  document.getElementById('popupPrevBtn').disabled = idx === 0;
+  document.getElementById('popupNextBtn').disabled = idx >= visiblePopupList.length - 1;
+  document.getElementById('popupDontShow').checked = false;
+  document.getElementById('announcePopup').classList.add('show');
+}
+function popupPrev() { if (currentPopupIdx > 0) showPopup(currentPopupIdx - 1); }
+function popupNext() { if (currentPopupIdx < visiblePopupList.length - 1) showPopup(currentPopupIdx + 1); else closePopup(); }
+function closePopup() {
+  const dontShow = document.getElementById('popupDontShow').checked;
+  const a = visiblePopupList[currentPopupIdx];
+  setDismissed(a.id, new Date().toISOString());
+  document.getElementById('announcePopup').classList.remove('show');
+  if (dontShow) { visiblePopupList.forEach(item => setDismissed(item.id, new Date().toISOString())); return; }
+  if (currentPopupIdx < visiblePopupList.length - 1) { setTimeout(() => showPopup(currentPopupIdx + 1), 300); }
+}
+function openAnnounceManager() { renderAnnounceList(); document.getElementById('announceManagerModal').classList.add('show'); }
+function closeAnnounceManager() { document.getElementById('announceManagerModal').classList.remove('show'); }
+function renderAnnounceList() {
+  const list = document.getElementById('announceList');
+  if (announcements.length === 0) { list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);">暂无公告，点击上方按钮新增</div>'; return; }
+  const sorted = [...announcements].sort((a,b) => (b.priority||0) - (a.priority||0));
+  list.innerHTML = sorted.map(a => {
+    const modeIcon = a.mode === 'popup' ? '🔔' : '📌';
+    const freqLabel = {always:'每次',hourly:'每小时',daily:'每天',weekly:'每周',once:'一次'}[a.frequency] || '每次';
+    const enabledLabel = a.enabled === false ? '<span style="color:var(--text-muted);font-size:11px;">（已禁用）</span>' : '';
+    const expired = a.expiry && new Date(a.expiry) < new Date() ? '<span style="color:var(--danger);font-size:11px;">（已过期）</span>' : '';
+    return '<div style="padding:14px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;background:var(--bg-card);transition:var(--transition);" onmouseenter="this.style.borderColor=\'var(--gray-300)\'" onmouseleave="this.style.borderColor=\'var(--border)\'">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'
+        + '<div style="flex:1;min-width:0;">'
+          + '<div style="font-weight:600;font-size:14px;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
+            + '<span>' + modeIcon + '</span><span>' + escHtml(a.title) + '</span>' + enabledLabel + expired
+          + '</div>'
+          + '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + freqLabel + ' · ' + (a.mode==='popup'?'弹窗':'横幅') + (a.expiry?' · 过期 '+a.expiry:'') + '</div>'
+        + '</div>'
+        + '<div style="display:flex;gap:4px;flex-shrink:0;">'
+          + '<button class="btn btn-ghost btn-sm" onclick="toggleAnnounceEnabled(\'' + a.id + '\')">' + (a.enabled===false?'⏸️':'▶️') + '</button>'
+          + '<button class="btn btn-ghost btn-sm" onclick="editAnnouncement(\'' + a.id + '\')">✏️</button>'
+          + '<button class="btn btn-danger btn-sm" onclick="deleteAnnouncement(\'' + a.id + '\')">🗑️</button>'
+        + '</div>'
+      + '</div></div>';
+  }).join('');
+}
+function openAnnounceEditModal(a) {
+  document.getElementById('announceEditTitle').textContent = a ? '编辑公告' : '新增公告';
+  document.getElementById('announceEditId').value = a ? a.id : '';
+  document.getElementById('announceInputTitle').value = a ? a.title : '';
+  document.getElementById('announceInputContent').value = a ? a.content : '';
+  document.getElementById('announceInputMode').value = a ? (a.mode || 'popup') : 'popup';
+  document.getElementById('announceInputFreq').value = a ? (a.frequency || 'daily') : 'daily';
+  document.getElementById('announceInputExpiry').value = a ? (a.expiry || '') : '';
+  document.getElementById('announceInputPriority').value = a ? (a.priority || 0) : 0;
+  if (a && a.image) {
+    pendingAnnounceImage = a.image;
+    document.getElementById('announceInputImage').value = a.image.startsWith('data:') ? '' : a.image;
+    showAnnounceImagePreview(a.image, a.image.startsWith('data:') ? '已上传图片' : a.image.split('/').pop() || '图片');
+  } else { clearAnnounceImage(); }
+  document.getElementById('announceEditModal').classList.add('show');
+}
+function closeAnnounceEditModal() { document.getElementById('announceEditModal').classList.remove('show'); clearAnnounceImage(); }
+function handleAnnounceImageUpload(e) {
+  const file = e.target.files[0]; if (!file) return;
+  if (file.size > 2*1024*1024) { showToast('⚠️ 图片超过 2MB','error'); return; }
+  const reader = new FileReader();
+  reader.onload = function(ev) { pendingAnnounceImage = ev.target.result; showAnnounceImagePreview(pendingAnnounceImage, file.name); };
+  reader.readAsDataURL(file);
+}
+function showAnnounceImagePreview(src, name) {
+  document.getElementById('announcePreviewImg').src = src;
+  document.getElementById('announcePreviewName').textContent = name || '图片';
+  document.getElementById('announceImgPreview').classList.add('show');
+}
+function clearAnnounceImage() {
+  pendingAnnounceImage = null; document.getElementById('announceInputImage').value = '';
+  document.getElementById('announceImageFile').value = '';
+  document.getElementById('announceImgPreview').classList.remove('show');
+}
+function saveAnnouncement(e) {
+  e.preventDefault();
+  const editId = document.getElementById('announceEditId').value;
+  const imageUrl = document.getElementById('announceInputImage').value.trim();
+  const data = {
+    id: editId || 'ann_' + Date.now(),
+    title: document.getElementById('announceInputTitle').value.trim(),
+    content: document.getElementById('announceInputContent').value,
+    mode: document.getElementById('announceInputMode').value,
+    frequency: document.getElementById('announceInputFreq').value,
+    expiry: document.getElementById('announceInputExpiry').value || '',
+    priority: parseInt(document.getElementById('announceInputPriority').value) || 0,
+    image: pendingAnnounceImage || imageUrl || '',
+    date: new Date().toISOString().slice(0,10), enabled: true,
+  };
+  if (editId) {
+    const idx = announcements.findIndex(a => a.id === editId);
+    if (idx !== -1) announcements[idx] = { ...announcements[idx], ...data };
+    showToast('✅ 公告已更新','success'); addChangelog('edit', '编辑了公告: ' + data.title);
+  } else {
+    announcements.unshift(data);
+    showToast('✅ 公告已添加','success'); addChangelog('add', '新增了公告: ' + data.title);
+  }
+  saveAnnouncements(); closeAnnounceEditModal(); renderAnnounceList();
+  if (cloudConfig && cloudConfig.token) { syncToCloud(); }
+}
+function editAnnouncement(id) { const a = announcements.find(x => x.id === id); if (!a) return; openAnnounceEditModal(a); }
+function deleteAnnouncement(id) {
+  if (!confirm('确定要删除这条公告吗？')) return;
+  const a = announcements.find(x => x.id === id);
+  announcements = announcements.filter(a => a.id !== id);
+  saveAnnouncements(); renderAnnounceList(); showToast('🗑️ 公告已删除','info');
+  addChangelog('delete', '删除了公告: ' + (a ? a.title : '未知'));
+  if (cloudConfig && cloudConfig.token) { syncToCloud(); }
+}
+function toggleAnnounceEnabled(id) {
+  const a = announcements.find(x => x.id === id); if (!a) return;
+  a.enabled = a.enabled === false ? true : false;
+  saveAnnouncements(); renderAnnounceList();
+  showToast(a.enabled ? '✅ 公告已启用' : '⏸️ 公告已禁用', 'info');
+}
+
+// ===== Modal close events =====
 document.getElementById('pwdModal').addEventListener('click', function(e) { if (e.target === this) closePwdModal(); });
 document.getElementById('cloudModal').addEventListener('click', function(e) { if (e.target === this) closeCloudModal(); });
 document.getElementById('changePwdModal').addEventListener('click', function(e) { if (e.target === this) closeChangePwdModal(); });
 document.getElementById('linkModal').addEventListener('click', function(e) { if (e.target === this) closeLinkModal(); });
+document.getElementById('announceManagerModal').addEventListener('click', function(e) { if (e.target === this) closeAnnounceManager(); });
+document.getElementById('announceEditModal').addEventListener('click', function(e) { if (e.target === this) closeAnnounceEditModal(); });
+document.getElementById('changelogModal').addEventListener('click', function(e) { if (e.target === this) closeChangelog(); });
+document.getElementById('announcePopup').addEventListener('click', function(e) {
+  if (e.target === this) {
+    const a = visiblePopupList[currentPopupIdx]; if (a) setDismissed(a.id, new Date().toISOString());
+    document.getElementById('announcePopup').classList.remove('show');
+  }
+});
+document.getElementById('announceInputImage').addEventListener('input', function() {
+  const url = this.value.trim();
+  if (url) { pendingAnnounceImage = url; showAnnounceImagePreview(url, url.split('/').pop() || '图片'); }
+  else if (!pendingAnnounceImage || !pendingAnnounceImage.startsWith('data:')) { clearAnnounceImage(); }
+});
 
-// ===== Init =====
+// ===== Start =====
 init();
 </script>
 </body>
