@@ -1,6 +1,22 @@
 {
   "links": [
     {
+      "title": "客服一线主管工作手册",
+      "url": "https://www.kdocs.cn/l/cc3RrnRgfI6c",
+      "description": "客服一线主管工作手册信息",
+      "type": "项目文档",
+      "department": "全公司",
+      "tags": [
+        "热线主管"
+      ],
+      "date": "2026-06-07",
+      "isToday": true,
+      "image": "",
+      "attachment": false,
+      "attachmentName": "",
+      "id": 1780818593143.0833
+    },
+    {
       "title": "热线值班主管工作梳理表",
       "url": "https://www.kdocs.cn/l/cvGSZEyaMyYF",
       "description": "热线值班主管每日值班手册",
@@ -20,6 +36,16 @@
     "1780818341679.8645": 1
   },
   "changelog": [
+    {
+      "time": "2026-06-07 15:49:53",
+      "action": "add",
+      "text": "新增了链接: 客服一线主管工作手册"
+    },
+    {
+      "time": "2026-06-07 15:46:12",
+      "action": "sync",
+      "text": "数据已同步到 GitHub"
+    },
     {
       "time": "2026-06-07 15:46:10",
       "action": "edit",
