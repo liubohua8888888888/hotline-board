@@ -20,9 +20,11 @@
       "title": "热线值班主管工作梳理表",
       "url": "https://www.kdocs.cn/l/cvGSZEyaMyYF",
       "description": "热线值班主管每日值班手册",
-      "type": "日报",
-      "department": "全公司",
-      "tags": [],
+      "type": "项目文档",
+      "department": "客服部",
+      "tags": [
+        "热线主管"
+      ],
       "date": "2026-06-07",
       "isToday": true,
       "image": "",
@@ -36,6 +38,16 @@
     "1780818341679.8645": 1
   },
   "changelog": [
+    {
+      "time": "2026-06-07 15:50:20",
+      "action": "edit",
+      "text": "编辑了链接: 热线值班主管工作梳理表"
+    },
+    {
+      "time": "2026-06-07 15:50:03",
+      "action": "sync",
+      "text": "数据已同步到 GitHub"
+    },
     {
       "time": "2026-06-07 15:50:02",
       "action": "edit",
