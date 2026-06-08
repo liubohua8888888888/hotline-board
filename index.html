@@ -1425,21 +1425,25 @@ function openDingModal() {
   document.getElementById('dingModal').classList.add('show');
 }
 function closeDingModal() { document.getElementById('dingModal').classList.remove('show'); }
+async function dingFetch(webhook, body) {
+  const proxyUrl = 'https://cors-proxy.lb945.workers.dev/?url=';
+  const resp = await fetch(proxyUrl + encodeURIComponent(webhook), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  return resp.json();
+}
 async function testDingTalk() {
   const webhook = document.getElementById('dingWebhook').value.trim();
   const errorEl = document.getElementById('dingError'); const successEl = document.getElementById('dingSuccess');
   errorEl.style.display = 'none'; successEl.style.display = 'none';
   if (!webhook) { errorEl.textContent = '请输入 Webhook 地址'; errorEl.style.display = 'block'; return; }
   try {
-    const resp = await fetch(webhook, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        msgtype: 'markdown',
-        markdown: { title: '热线看板测试通知', text: '### 📢 热线看板测试通知\n> 钉钉通知配置成功！\n> 后续卡片更新将自动推送到本群。\n\n**Made by 刘博华**' }
-      })
+    const result = await dingFetch(webhook, {
+      msgtype: 'markdown',
+      markdown: { title: '热线看板测试通知', text: '### 📢 热线看板测试通知\n> 钉钉通知配置成功！\n> 后续卡片更新将自动推送到本群。\n\n**Made by 刘博华**' }
     });
-    const result = await resp.json();
     if (result.errcode === 0) { successEl.textContent = '✅ 测试消息发送成功！请查看钉钉群'; successEl.style.display = 'block'; }
     else { errorEl.textContent = '❌ 发送失败: ' + (result.errmsg || '未知错误'); errorEl.style.display = 'block'; }
   } catch(e) { errorEl.textContent = '❌ 网络错误: ' + e.message; errorEl.style.display = 'block'; }
@@ -1459,10 +1463,8 @@ function sendDingTalk(action, linkData) {
   const vis = linkData?.visibility === 'supervisor' ? '👔 仅主管' : '👥 全员';
   const time = getTimeStr();
   const text = `### ${emojiMap[action]} [热线看板] ${actionMap[action]}了卡片\n\n> **${title}**\n> \n> - **类型：** ${type}\n> - **部门：** ${dept}\n> - **日期：** ${date}\n> - **可见：** ${vis}\n> - **描述：** ${desc}\n> \n> ⏰ ${time}\n\n**Made by 刘博华**`;
-  fetch(dingConfig.webhook, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ msgtype: 'markdown', markdown: { title: '[热线看板] ' + actionMap[action] + '卡片', text: text } })
+  dingFetch(dingConfig.webhook, {
+    msgtype: 'markdown', markdown: { title: '[热线看板] ' + actionMap[action] + '卡片', text: text }
   }).catch(e => { /* 静默失败 */ });
 }
 
