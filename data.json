@@ -18,23 +18,6 @@
       "id": 1780984274433.828
     },
     {
-      "title": "热线业务群功能",
-      "url": "https://www.kdocs.cn/l/chYHSYIxst5M",
-      "description": "热线业务群功能信息，详细请查询链接",
-      "type": "公告",
-      "department": "客户体验中心",
-      "tags": [
-        "重要"
-      ],
-      "date": "2026-06-09",
-      "isToday": true,
-      "image": "",
-      "attachment": false,
-      "attachmentName": "",
-      "visibility": "all",
-      "id": 1780977878759.5845
-    },
-    {
       "title": "客服一线主管工作手册",
       "url": "https://www.kdocs.cn/l/cc3RrnRgfI6c",
       "description": "客服一线主管工作手册信息",
@@ -76,6 +59,31 @@
     "1780984274433.828": 1
   },
   "changelog": [
+    {
+      "time": "2026-06-09 18:07:41",
+      "action": "delete",
+      "text": "删除了链接: 热线业务群功能"
+    },
+    {
+      "time": "2026-06-09 18:07:21",
+      "action": "login",
+      "text": "管理员登录验证成功"
+    },
+    {
+      "time": "2026-06-09 18:03:33",
+      "action": "login",
+      "text": "主管模式已开启"
+    },
+    {
+      "time": "2026-06-09 18:03:05",
+      "action": "login",
+      "text": "管理员登录验证成功"
+    },
+    {
+      "time": "2026-06-09 13:51:46",
+      "action": "sync",
+      "text": "数据已同步到 GitHub"
+    },
     {
       "time": "2026-06-09 13:51:45",
       "action": "edit",
