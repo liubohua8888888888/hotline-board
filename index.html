@@ -543,6 +543,66 @@
   }
   .detail-modal-footer .btn { padding: 10px 20px; font-size: 13.5px; }
 
+  /* ===== Card Entrance Animation ===== */
+  @keyframes cardFadeIn { from { opacity: 0; transform: translateY(24px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .link-card { animation: cardFadeIn 0.45s cubic-bezier(0.4, 0, 0.2, 1) both; }
+  .links-grid .link-card:nth-child(1) { animation-delay: 0.02s; }
+  .links-grid .link-card:nth-child(2) { animation-delay: 0.06s; }
+  .links-grid .link-card:nth-child(3) { animation-delay: 0.10s; }
+  .links-grid .link-card:nth-child(4) { animation-delay: 0.14s; }
+  .links-grid .link-card:nth-child(5) { animation-delay: 0.18s; }
+  .links-grid .link-card:nth-child(6) { animation-delay: 0.22s; }
+  .links-grid .link-card:nth-child(n+7) { animation-delay: 0.26s; }
+  .group-section .link-card:nth-child(1) { animation-delay: 0.02s; }
+  .group-section .link-card:nth-child(2) { animation-delay: 0.06s; }
+  .group-section .link-card:nth-child(3) { animation-delay: 0.10s; }
+  .group-section .link-card:nth-child(n+4) { animation-delay: 0.14s; }
+  /* ===== Skeleton Loading ===== */
+  .skeleton-card {
+    background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border); overflow: hidden; padding: 18px 20px 16px;
+  }
+  .skeleton-line { height: 14px; border-radius: 7px; background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; margin-bottom: 10px; }
+  .skeleton-line.w60 { width: 60%; }
+  .skeleton-line.w80 { width: 80%; }
+  .skeleton-line.w40 { width: 40%; }
+  .skeleton-line.h20 { height: 20px; margin-bottom: 14px; }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+  /* ===== Stat Number Animation ===== */
+  @keyframes statPop { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.08); } 100% { transform: scale(1); opacity: 1; } }
+  .stat-number.animated { animation: statPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  /* ===== Filter Chip Animation ===== */
+  @keyframes chipPop { 0% { transform: scale(0.85); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  .filter-chip { animation: chipPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  .filter-chip:nth-child(1) { animation-delay: 0.01s; }
+  .filter-chip:nth-child(2) { animation-delay: 0.04s; }
+  .filter-chip:nth-child(3) { animation-delay: 0.07s; }
+  .filter-chip:nth-child(4) { animation-delay: 0.10s; }
+  .filter-chip:nth-child(5) { animation-delay: 0.13s; }
+  .filter-chip:nth-child(n+6) { animation-delay: 0.16s; }
+  /* ===== Section Title Animation ===== */
+  @keyframes sectionSlide { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+  .section-title { animation: sectionSlide 0.4s ease both; }
+  /* ===== Button Ripple Effect ===== */
+  .btn, .filter-chip, .nav-tab, .dark-toggle, .supervisor-toggle, .back-to-top {
+    position: relative; overflow: hidden;
+  }
+  .btn::after, .filter-chip::after, .nav-tab::after, .dark-toggle::after, .supervisor-toggle::after, .back-to-top::after {
+    content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0;
+    background: rgba(255,255,255,0.25); border-radius: 50%;
+    transform: translate(-50%, -50%); transition: width 0.4s ease, height 0.4s ease, opacity 0.4s ease;
+    opacity: 0; pointer-events: none; z-index: 1;
+  }
+  .btn:active::after, .filter-chip:active::after, .nav-tab:active::after, .dark-toggle:active::after, .supervisor-toggle:active::after, .back-to-top:active::after {
+    width: 200px; height: 200px; opacity: 0;
+  }
+  /* ===== Search Box Focus Glow ===== */
+  .search-box input:focus { animation: searchGlow 0.3s ease; }
+  @keyframes searchGlow { 0% { box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.15); } 100% { box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.08); } }
+  /* ===== Empty State Bounce ===== */
+  @keyframes emptyBounce { 0% { opacity: 0; transform: scale(0.8); } 50% { transform: scale(1.05); } 100% { opacity: 1; transform: scale(1); } }
+  .empty-state .empty-icon { animation: emptyBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  .empty-state p { animation: emptyBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both; }
   /* ===== Responsive ===== */
   @media (max-width: 768px) {
     .header { padding: 18px 16px 16px; }
@@ -1630,34 +1690,40 @@ function renderLinks() {
     container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>没有匹配的链接，试试其他关键词吧</p></div>';
     return;
   }
-
-  if (currentView === 'all') {
-    container.innerHTML = '<div class="links-grid">' + filtered.map(l => buildCard(l)).join('') + '</div>';
-    bindAdminEvents(); return;
+  // Compute groups before skeleton
+  let sortedGroups = [];
+  if (currentView !== 'all') {
+    const groupLabel = currentView === 'type' ? l => l.type : currentView === 'dept' ? l => l.department : l => l.date;
+    const groups = {};
+    filtered.forEach(l => { const g = groupLabel(l); if (!groups[g]) groups[g] = []; groups[g].push(l); });
+    sortedGroups = Object.entries(groups);
+    if (currentView === 'type') {
+      const order = ['日报','周报','公告','通知','项目文档','其他'];
+      sortedGroups.sort((a, b) => { const ai = order.indexOf(a[0]), bi = order.indexOf(b[0]); return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi); });
+    } else if (currentView === 'date') { sortedGroups.sort((a, b) => b[0].localeCompare(a[0])); }
+    else { sortedGroups.sort((a, b) => b[1].length - a[1].length); }
   }
+  // Skeleton preview
+  container.innerHTML = '<div class="links-grid">' + Array(Math.min(filtered.length, 6)).fill('<div class="skeleton-card"><div class="skeleton-line h20 w60"></div><div class="skeleton-line w80"></div><div class="skeleton-line w40"></div></div>').join('') + '</div>';
+  setTimeout(() => renderCards(filtered), 120);
 
-  let groupLabel;
-  if (currentView === 'type') groupLabel = l => l.type;
-  else if (currentView === 'dept') groupLabel = l => l.department;
-  else if (currentView === 'date') groupLabel = l => l.date;
-
-  const groups = {};
-  filtered.forEach(l => { const g = groupLabel(l); if (!groups[g]) groups[g] = []; groups[g].push(l); });
-  const sortedGroups = Object.entries(groups);
-  if (currentView === 'type') {
-    const order = ['日报','周报','公告','通知','项目文档','其他'];
-    sortedGroups.sort((a, b) => { const ai = order.indexOf(a[0]), bi = order.indexOf(b[0]); return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi); });
-  } else if (currentView === 'date') { sortedGroups.sort((a, b) => b[0].localeCompare(a[0])); }
-  else { sortedGroups.sort((a, b) => b[1].length - a[1].length); }
-
-  let html = '';
-  sortedGroups.forEach(([group, items]) => {
-    const typeIcon = currentView === 'type' ? getTypeIcon(group) : currentView === 'dept' ? '🏢' : '📅';
-    html += '<div class="group-section"><div class="section-title">' + typeIcon + ' ' + group + ' <span class="count">(' + items.length + ')</span></div><div class="links-grid">' + items.map(l => buildCard(l)).join('') + '</div></div>';
-  });
-  container.innerHTML = html;
-  bindAdminEvents();
-}
+  function renderCards(fItems) {
+    if (fItems.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>没有匹配的链接，试试其他关键词吧</p></div>';
+      return;
+    }
+    if (currentView === 'all') {
+      container.innerHTML = '<div class="links-grid">' + fItems.map(l => buildCard(l)).join('') + '</div>';
+      bindAdminEvents(); animateStats(); return;
+    }
+    let h = '';
+    sortedGroups.forEach(([group, items]) => {
+      const typeIcon = currentView === 'type' ? getTypeIcon(group) : currentView === 'dept' ? '🏢' : '📅';
+      h += '<div class="group-section"><div class="section-title">' + typeIcon + ' ' + group + ' <span class="count">(' + items.length + ')</span></div><div class="links-grid">' + items.map(l => buildCard(l)).join('') + '</div></div>';
+    });
+    container.innerHTML = h;
+    bindAdminEvents(); animateStats();
+  }
 
 function bindAdminEvents() {
   if (!adminMode) return;
@@ -1667,6 +1733,11 @@ function bindAdminEvents() {
 
 function getTypeIcon(type) { const map = { '日报':'📋','周报':'📊','公告':'📢','通知':'📌','项目文档':'📄','其他':'📁' }; return map[type] || '📁'; }
 
+function animateStats() {
+  document.querySelectorAll('.stat-number').forEach(el => {
+    el.classList.remove('animated'); void el.offsetWidth; el.classList.add('animated');
+  });
+}
 function renderFilterChips(filtered) {
   const allTypes = [...new Set(links.map(l => l.type))];
   const allDepts = [...new Set(links.map(l => l.department))];
