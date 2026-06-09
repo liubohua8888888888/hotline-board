@@ -1180,7 +1180,7 @@ async function loadFromCloud() {
     const remote = JSON.parse(decoded);
     if (remote.links) links = remote.links;
     if (remote.announcements) announcements = remote.announcements;
-    if (remote.clickCounts) clickCounts = remote.clickCounts;
+    if (remote.clickCounts) { for (const k in remote.clickCounts) { clickCounts[k] = Math.max(clickCounts[k] || 0, remote.clickCounts[k]); } saveClicks(); }
     if (remote.changelog) saveChangelog(remote.changelog);
     saveData(); saveAnnouncements(); saveClicks();
     renderLinks();
