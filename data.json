@@ -16,23 +16,6 @@
       "attachmentName": "",
       "id": 1780818593143.0833,
       "visibility": "supervisor"
-    },
-    {
-      "title": "热线值班主管工作梳理表",
-      "url": "https://www.kdocs.cn/l/cvGSZEyaMyYF",
-      "description": "热线值班主管每日值班手册",
-      "type": "项目文档",
-      "department": "客户体验中心",
-      "tags": [
-        "热线主管"
-      ],
-      "date": "2026-06-07",
-      "isToday": true,
-      "image": "",
-      "attachment": false,
-      "attachmentName": "",
-      "id": 1780818341679.8645,
-      "visibility": "supervisor"
     }
   ],
   "announcements": [],
@@ -42,6 +25,11 @@
     "1780984274433.828": 1
   },
   "changelog": [
+    {
+      "time": "2026-06-09 18:07:59",
+      "action": "delete",
+      "text": "删除了链接: 热线值班主管工作梳理表"
+    },
     {
       "time": "2026-06-09 18:07:57",
       "action": "delete",
