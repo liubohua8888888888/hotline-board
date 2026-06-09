@@ -1,23 +1,6 @@
 {
   "links": [
     {
-      "title": "西安客服中心试用期目标确认书——O岗一线",
-      "url": "https://www.kdocs.cn/l/cqSf5ZrE30NT",
-      "description": "西安客服中心试用期目标确认书——O岗一线",
-      "type": "项目文档",
-      "department": "客户体验中心",
-      "tags": [
-        "重要"
-      ],
-      "date": "2026-06-09",
-      "isToday": true,
-      "image": "",
-      "attachment": false,
-      "attachmentName": "",
-      "visibility": "supervisor",
-      "id": 1780984274433.828
-    },
-    {
       "title": "客服一线主管工作手册",
       "url": "https://www.kdocs.cn/l/cc3RrnRgfI6c",
       "description": "客服一线主管工作手册信息",
@@ -59,6 +42,21 @@
     "1780984274433.828": 1
   },
   "changelog": [
+    {
+      "time": "2026-06-09 18:07:57",
+      "action": "delete",
+      "text": "删除了链接: 西安客服中心试用期目标确认书——O岗一线"
+    },
+    {
+      "time": "2026-06-09 18:07:50",
+      "action": "login",
+      "text": "主管模式已开启"
+    },
+    {
+      "time": "2026-06-09 18:07:44",
+      "action": "sync",
+      "text": "数据已同步到 GitHub"
+    },
     {
       "time": "2026-06-09 18:07:41",
       "action": "delete",
