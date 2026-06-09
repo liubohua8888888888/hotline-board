@@ -711,6 +711,11 @@
         <button class="btn btn-ghost btn-sm" onclick="openDingModal()">🤖 钉钉通知</button>
         <button class="btn btn-ghost btn-sm" onclick="openChangePwdModal()">🔑 改密码</button>
         <button class="btn btn-ghost btn-sm" onclick="openAnnounceManager()">📢 公告管理</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportData()" title="导出完整备份">📥 备份</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV()" title="导出卡片列表">📊 导出</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('importFileInput').click()" title="导入数据">📤 导入</button>
+        <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
+        <button class="btn btn-ghost btn-sm" onclick="openChangelog()" title="更新记录">📝 记录</button>
         <button class="btn btn-sm" onclick="openAddModal()" style="background:var(--primary);color:#fff;font-weight:600;">＋ 新增链接</button>
       </div>
     </div>
@@ -754,14 +759,7 @@
 <!-- Footer -->
 <footer class="footer">
   <div class="footer-inner">
-    <div class="footer-left">Made by 刘博华 · 热线看板 v2.0</div>
-    <div class="footer-right">
-      <button onclick="exportData()" title="导出完整备份（含公告、点击统计、更新记录）">📥 备份(JSON)</button>
-      <button onclick="exportCSV()" title="导出卡片列表（Excel可打开）">📊 导出CSV</button>
-      <button onclick="document.getElementById('importFileInput').click()">📤 导入数据</button>
-      <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
-      <button onclick="openChangelog()">📝 更新记录</button>
-    </div>
+    <div class="footer-left">Made by 刘博华 · 热线看板 v2.2</div>
   </div>
 </footer>
 
