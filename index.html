@@ -1067,7 +1067,7 @@
     <div class="detail-modal-body">
       <p class="detail-desc" id="detailDesc"></p>
       <div class="detail-image" id="detailImageWrap" style="display:none;">
-        <img id="detailImage" src="" alt="配图" onerror="this.parentElement.style.display='none'">
+        <img id="detailImage" src="" alt="配图">
       </div>
       <div class="detail-tags" id="detailTags"></div>
       <div class="detail-stats">
@@ -1666,11 +1666,12 @@ function renderLinks() {
     return 0;
   });
 
-  // Stats
-  document.getElementById('statTotal').textContent = links.length;
-  document.getElementById('statToday').textContent = links.filter(l => l.isToday).length;
-  document.getElementById('statTypes').textContent = new Set(links.map(l => l.type)).size;
-  document.getElementById('statDepts').textContent = new Set(links.map(l => l.department)).size;
+  // Stats (based on visible links only)
+  const visibleLinks = supervisorMode ? links : links.filter(l => (l.visibility || 'all') === 'all');
+  document.getElementById('statTotal').textContent = visibleLinks.length;
+  document.getElementById('statToday').textContent = visibleLinks.filter(l => l.isToday).length;
+  document.getElementById('statTypes').textContent = new Set(visibleLinks.map(l => l.type)).size;
+  document.getElementById('statDepts').textContent = new Set(visibleLinks.map(l => l.department)).size;
 
   // Result count
   document.getElementById('resultCount').textContent = '共 ' + filtered.length + ' 条结果';
@@ -1748,8 +1749,9 @@ function animateStats() {
   });
 }
 function renderFilterChips(filtered) {
-  const allTypes = [...new Set(links.map(l => l.type))];
-  const allDepts = [...new Set(links.map(l => l.department))];
+  const visibleLinks = supervisorMode ? links : links.filter(l => (l.visibility || 'all') === 'all');
+  const allTypes = [...new Set(visibleLinks.map(l => l.type))];
+  const allDepts = [...new Set(visibleLinks.map(l => l.department))];
   const allFilters = ['all', ...allTypes, ...allDepts];
   const labels = { 'all': '🏷️ 全部' };
   allTypes.forEach(t => { labels[t] = getTypeIcon(t) + ' ' + t; });
@@ -1769,7 +1771,7 @@ function buildCard(l) {
   const visBadge = supervisorMode && vis === 'supervisor' ? '<span class="visibility-badge supervisor">👔 主管</span>' : (supervisorMode ? '<span class="visibility-badge all">👥 全员</span>' : '');
   const linkUrl = l.url && l.url !== '#' ? l.url : '#';
   const isExternal = linkUrl !== '#' && (linkUrl.startsWith('http') || linkUrl.startsWith('//'));
-  const tags = (l.tags || []).map(t => '<span class="mini-tag">' + t + '</span>').join('');
+  const tags = (l.tags || []).map(t => '<span class="mini-tag">' + escHtml(t) + '</span>').join('');
   const clicks = getClicks(l.id);
   let imageHtml = '';
   if (l.image) {
@@ -1780,10 +1782,10 @@ function buildCard(l) {
   return '<div class="link-card ' + todayClass + '" onclick="openDetail(\'' + l.id + '\')" style="cursor:pointer;">' + todayBadge + visBadge +
     '<div class="link-card-inner">' +
       '<div class="link-card-header"><span class="type-tag type-' + l.type + '">' + l.type + '</span>' + adminActions + '</div>' +
-      '<h3>' + l.title + '</h3>' +
-      (l.description ? '<p class="desc">' + l.description + '</p>' : '') +
+      '<h3>' + escHtml(l.title) + '</h3>' +
+      (l.description ? '<p class="desc">' + escHtml(l.description) + '</p>' : '') +
       imageHtml +
-      '<div class="meta"><span class="meta-item"><span class="dept-tag">🏢 ' + l.department + '</span></span><span class="meta-item">📅 ' + l.date + '</span>' +
+      '<div class="meta"><span class="meta-item"><span class="dept-tag">🏢 ' + escHtml(l.department) + '</span></span>' + '<span class="meta-item">📅 ' + l.date + '</span>' +
       (clicks > 0 ? '<span class="meta-item"><span class="click-count">👁 ' + clicks + '</span></span>' : '') + '</div>' +
       (tags ? '<div class="tag-list">' + tags + '</div>' : '') +
     '</div>' +
@@ -1822,7 +1824,9 @@ function openDetail(id) {
   document.getElementById('detailDesc').textContent = l.description || '暂无描述';
 
   if (l.image) {
-    document.getElementById('detailImage').src = l.image;
+    const detailImg = document.getElementById('detailImage');
+    detailImg.src = l.image;
+    detailImg.onerror = function() { document.getElementById('detailImageWrap').style.display = 'none'; };
     document.getElementById('detailImageWrap').style.display = 'block';
     document.getElementById('detailImageWrap').onclick = function() { openLightbox(l.image); };
   } else { document.getElementById('detailImageWrap').style.display = 'none'; }
@@ -2020,8 +2024,9 @@ function showPopup(idx) {
   document.getElementById('popupDate').textContent = '📅 ' + (a.date || '');
   const body = document.getElementById('popupBody');
   let html = a.content || '';
-  if (a.image) html += '<br><img src="' + a.image + '" alt="配图" onerror="this.style.display=\'none\'">';
+  if (a.image) html += '<br><img src="' + a.image.replace(/"/g, '&quot;') + '" alt="配图">';
   body.innerHTML = html;
+  body.querySelectorAll('img').forEach(img => { img.addEventListener('error', function() { this.style.display = 'none'; }); });
   document.getElementById('popupPageInfo').textContent = (idx+1) + '/' + visiblePopupList.length;
   document.getElementById('popupPrevBtn').disabled = idx === 0;
   document.getElementById('popupNextBtn').disabled = idx >= visiblePopupList.length - 1;
