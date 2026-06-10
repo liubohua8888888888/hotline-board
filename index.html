@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>热线看板</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -191,7 +192,7 @@
   body.dark .nav-tab:hover:not(.active) { background: rgba(255,255,255,0.08); }
 
   /* ===== Cards Grid ===== */
-  .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+  .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; max-width: 1200px; }
 
   /* ===== Card ===== */
   .link-card {
@@ -269,16 +270,6 @@
   .visibility-badge.supervisor { background: rgba(245,158,11,0.12); color: #d97706; border: 1px solid rgba(245,158,11,0.2); }
   body.dark .visibility-badge.all { background: rgba(34,197,94,0.15); color: #4ade80; }
   body.dark .visibility-badge.supervisor { background: rgba(245,158,11,0.15); color: #fbbf24; }
-  .visibility-badge {
-    position: absolute; top: 8px; right: 8px; z-index: 2;
-    font-size: 10px; padding: 2px 8px; border-radius: 10px;
-    font-weight: 600; backdrop-filter: blur(4px);
-  }
-  .visibility-badge.all { background: rgba(34,197,94,0.12); color: #16a34a; border: 1px solid rgba(34,197,94,0.2); }
-  .visibility-badge.supervisor { background: rgba(245,158,11,0.12); color: #d97706; border: 1px solid rgba(245,158,11,0.2); }
-  body.dark .visibility-badge.all { background: rgba(34,197,94,0.15); color: #4ade80; }
-  body.dark .visibility-badge.supervisor { background: rgba(245,158,11,0.15); color: #fbbf24; }
-
   /* ===== Section ===== */
   .section-title {
     font-size: 15px; font-weight: 700; color: var(--text);
@@ -759,7 +750,7 @@
 <!-- Footer -->
 <footer class="footer">
   <div class="footer-inner">
-    <div class="footer-left">Made by 刘博华 · 热线看板 v2.2</div>
+    <div class="footer-left">Made by 刘博华 · 热线看板 v2.3</div>
   </div>
 </footer>
 
@@ -1123,12 +1114,12 @@ let visiblePopupList = [];
 let visibleBannerList = [];
 
 const DEFAULT_LINKS = [
-  { id: Date.now() - 86400000 * 2, title: '5月27日销售数据日报', url: '#', description: '昨日各团队销售业绩及环比分析', type: '日报', department: '销售部', tags: ['销售数据', '业绩'], date: '2026-05-27', isToday: false, image: '' },
-  { id: Date.now() - 86400000, title: '本周技术研发周报', url: '#', description: '本周技术部各项目进展及下周计划', type: '周报', department: '技术部', tags: ['研发', '项目进展'], date: '2026-05-28', isToday: false, image: '' },
-  { id: Date.now(), title: '关于端午放假安排的通知', url: '#', description: '2026年端午节放假及相关工作安排', type: '通知', department: '全公司', tags: ['放假', '重要'], date: '2026-05-29', isToday: true, image: '' },
-  { id: Date.now() + 1, title: '5月运营数据看板', url: '#', description: '各渠道运营数据实时看板', type: '日报', department: '运营部', tags: ['运营数据', '看板'], date: '2026-05-29', isToday: true, image: '' },
-  { id: Date.now() + 2, title: 'Q2 产品路线图更新', url: '#', description: '二季度产品迭代计划及各模块排期', type: '项目文档', department: '技术部', tags: ['产品', '路线图'], date: '2026-05-29', isToday: true, image: '' },
-  { id: Date.now() + 3, title: '全员大会会议纪要', url: '#', description: '5月全员大会主要内容及决议事项', type: '公告', department: '全公司', tags: ['会议', '纪要'], date: '2026-05-28', isToday: false, image: '' },
+  { id: Date.now() - 86400000 * 3, title: '上周销售数据日报', url: '#', description: '上周各团队销售业绩及环比分析', type: '日报', department: '销售部', tags: ['销售数据', '业绩'], date: '2026-06-09', isToday: false, image: '' },
+  { id: Date.now() - 86400000 * 2, title: '本周技术研发周报', url: '#', description: '本周技术部各项目进展及下周计划', type: '周报', department: '技术部', tags: ['研发', '项目进展'], date: '2026-06-10', isToday: false, image: '' },
+  { id: Date.now(), title: '关于6月排班调整的通知', url: '#', description: '6月中旬排班调整及相关注意事项', type: '通知', department: '客户体验中心', tags: ['排班', '重要'], date: '2026-06-11', isToday: true, image: '' },
+  { id: Date.now() + 1, title: '6月运营数据看板', url: '#', description: '各渠道运营数据实时看板', type: '日报', department: '运营部', tags: ['运营数据', '看板'], date: '2026-06-11', isToday: true, image: '' },
+  { id: Date.now() + 2, title: 'Q2 产品路线图更新', url: '#', description: '二季度产品迭代计划及各模块排期', type: '项目文档', department: '技术部', tags: ['产品', '路线图'], date: '2026-06-11', isToday: true, image: '' },
+  { id: Date.now() + 3, title: '全员大会会议纪要', url: '#', description: '6月全员大会主要内容及决议事项', type: '公告', department: '全公司', tags: ['会议', '纪要'], date: '2026-06-10', isToday: false, image: '' },
 ];
 
 // ===== Utility =====
@@ -1371,6 +1362,8 @@ function init() {
     renderLinks(); setupLightbox(); showActiveAnnouncements();
     // Loading
     setTimeout(() => { document.getElementById('loadingOverlay').classList.add('hide'); setTimeout(() => document.getElementById('loadingOverlay').style.display = 'none', 400); }, 300);
+    // Auto-refresh date every minute
+    setInterval(() => { document.getElementById('headerDate').textContent = getTodayStr(); }, 60000);
     // Back to Top
     window.addEventListener('scroll', () => {
       document.getElementById('backToTop').classList.toggle('show', window.scrollY > 400);
@@ -1685,7 +1678,8 @@ function renderLinks() {
   renderFilterChips(filtered);
 
   if (filtered.length === 0) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>没有匹配的链接，试试其他关键词吧</p></div>';
+    const emptyHint = adminMode ? '<p style="margin-top:16px;"><button class=\'btn btn-sm\' style=\'background:var(--primary);color:#fff;font-weight:600;\' onclick=\'openAddModal()\'>＋ 新增链接</button></p>' : '<p style="margin-top:10px;font-size:13px;color:var(--text-muted);">如需添加内容，请联系管理员</p>';
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>没有匹配的链接，试试其他关键词吧</p>' + emptyHint + '</div>';
     return;
   }
   // Compute groups before skeleton
@@ -1702,12 +1696,23 @@ function renderLinks() {
     else { sortedGroups.sort((a, b) => b[1].length - a[1].length); }
   }
   // Skeleton preview
-  container.innerHTML = '<div class="links-grid">' + Array(Math.min(filtered.length, 6)).fill('<div class="skeleton-card"><div class="skeleton-line h20 w60"></div><div class="skeleton-line w80"></div><div class="skeleton-line w40"></div></div>').join('') + '</div>';
+  const skeletonCard = '<div class="skeleton-card"><div class="skeleton-line h20 w60"></div><div class="skeleton-line w80"></div><div class="skeleton-line w40"></div></div>';
+  if (currentView === 'all') {
+    container.innerHTML = '<div class="links-grid">' + Array(Math.min(filtered.length, 6)).fill(skeletonCard).join('') + '</div>';
+  } else {
+    let skeletonHtml = '';
+    sortedGroups.forEach(([group, items]) => {
+      const typeIcon = currentView === 'type' ? getTypeIcon(group) : currentView === 'dept' ? '🏢' : '📅';
+      skeletonHtml += '<div class="group-section"><div class="section-title">' + typeIcon + ' ' + group + ' <span class="count">(' + items.length + ')</span></div><div class="links-grid">' + Array(Math.min(items.length, 3)).fill(skeletonCard).join('') + '</div></div>';
+    });
+    container.innerHTML = skeletonHtml;
+  }
   setTimeout(() => renderCards(filtered), 120);
 
   function renderCards(fItems) {
     if (fItems.length === 0) {
-      container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>没有匹配的链接，试试其他关键词吧</p></div>';
+      const emptyHint = adminMode ? '<p style="margin-top:16px;"><button class=\'btn btn-sm\' style=\'background:var(--primary);color:#fff;font-weight:600;\' onclick=\'openAddModal()\'>＋ 新增链接</button></p>' : '<p style="margin-top:10px;font-size:13px;color:var(--text-muted);">如需添加内容，请联系管理员</p>';
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>没有匹配的链接，试试其他关键词吧</p>' + emptyHint + '</div>';
       return;
     }
     if (currentView === 'all') {
@@ -1763,7 +1768,7 @@ function buildCard(l) {
   const clicks = getClicks(l.id);
   let imageHtml = '';
   if (l.image) {
-    imageHtml = '<div class="card-image-wrap" onclick="openLightbox(\'' + l.image.replace(/'/g, "\\'") + '\')"><img src="' + l.image + '" alt="' + l.title + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=img-placeholder><span style=font-size:28px>🖼️</span>图片加载失败</div>\'"></div>';
+    imageHtml = '<div class="card-image-wrap" onclick="openLightbox(\'' + l.image.replace(/'/g, "\\'") + '\')"><img src="' + l.image + '" alt="' + l.title + '" loading="lazy" onerror=\"this.parentElement.style.display='none'\"></div>';
   }
   const adminActions = adminMode ? '<div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();"><button class="btn btn-ghost btn-sm admin-edit" data-id="' + l.id + '">✏️</button><button class="btn btn-danger btn-sm admin-delete" data-id="' + l.id + '">🗑️</button></div>' : '';
 
