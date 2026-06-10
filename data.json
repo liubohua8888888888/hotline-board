@@ -1,21 +1,5 @@
 {
-  "links": [
-    {
-      "title": "测试",
-      "url": "",
-      "description": "测试",
-      "type": "日报",
-      "department": "全公司",
-      "tags": [],
-      "date": "2026-06-11",
-      "isToday": true,
-      "image": "",
-      "attachment": false,
-      "attachmentName": "",
-      "visibility": "all",
-      "id": 1781108236312.7341
-    }
-  ],
+  "links": [],
   "announcements": [],
   "clickCounts": {
     "1780818341679.8645": 1,
@@ -23,6 +7,16 @@
     "1780984274433.828": 1
   },
   "changelog": [
+    {
+      "time": "2026-06-11 00:17:43",
+      "action": "delete",
+      "text": "删除了链接: 测试"
+    },
+    {
+      "time": "2026-06-11 00:17:17",
+      "action": "sync",
+      "text": "数据已同步到 GitHub"
+    },
     {
       "time": "2026-06-11 00:17:16",
       "action": "add",
