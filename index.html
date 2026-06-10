@@ -750,7 +750,7 @@
 <!-- Footer -->
 <footer class="footer">
   <div class="footer-inner">
-    <div class="footer-left">Made by 刘博华 · 热线看板 v2.3</div>
+    <div class="footer-left">Made by 刘博华 · 热线看板 v2.5</div>
   </div>
 </footer>
 
@@ -1080,7 +1080,7 @@
   </div>
 </div>
 
-<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
+<div class="lightbox-overlay" id="lightboxOverlay">
   <img id="lightboxImg" src="" alt="预览">
 </div>
 <div class="toast-container" id="toastContainer"></div>
@@ -1199,7 +1199,7 @@ async function getGitHubFileSHA(token) {
 }
 async function syncToCloud() {
   if (!cloudConfig || !cloudConfig.token) return;
-  const syncData = { links: links, announcements: announcements, clickCounts: clickCounts, changelog: loadChangelog() };
+  const syncData = { links: links, announcements: announcements, clickCounts: clickCounts };
   const token = cloudConfig.token;
   const content = btoa(unescape(encodeURIComponent(JSON.stringify(syncData, null, 2))));
   const sha = await getGitHubFileSHA(token);
@@ -1230,7 +1230,6 @@ async function loadFromCloud() {
     if (remote.links) links = remote.links;
     if (remote.announcements) announcements = remote.announcements;
     if (remote.clickCounts) { for (const k in remote.clickCounts) { clickCounts[k] = Math.max(clickCounts[k] || 0, remote.clickCounts[k]); } saveClicks(); }
-    if (remote.changelog) saveChangelog(remote.changelog);
     saveData(); saveAnnouncements(); saveClicks();
     renderLinks();
     showToast('☁️ 已从 GitHub 加载数据', 'success');
@@ -1343,7 +1342,7 @@ function init() {
   (async () => {
     try {
       await loadFromCloud();
-      if (!links || links.length === 0) loadData();
+      if (!links || links.length === 0) { if (!localStorage.getItem(STORAGE_KEY)) loadData(); }
       loadAnnouncements();
     } catch(e) { loadData(); loadAnnouncements(); }
     updateSyncStatus();
@@ -1734,7 +1733,7 @@ function bindAdminEvents() {
   // Bind image error handlers
   document.querySelectorAll('.card-image-wrap img').forEach(img => {
     img.addEventListener('error', function() { this.parentElement.style.display = 'none'; });
-    img.parentElement.addEventListener('click', function() { openLightbox(this.querySelector('img')?.src || ''); });
+    img.parentElement.addEventListener('click', function() { const lbUrl = this.dataset.lb; if (lbUrl) openLightbox(decodeURIComponent(lbUrl)); });
   });
   if (!adminMode) return;
   document.querySelectorAll('.admin-edit').forEach(el => { el.addEventListener('click', () => openEditModal(el.dataset.id)); });
@@ -1775,7 +1774,9 @@ function buildCard(l) {
   const clicks = getClicks(l.id);
   let imageHtml = '';
   if (l.image) {
-        imageHtml = '<div class="card-image-wrap" onclick="openLightbox(\'' + l.image.replace(/'/g, "\\\'") + '\')"><img src="' + l.image + '" alt="' + l.title + '" loading="lazy"></div>';
+        const safeImgSrc = l.image.replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        const safeLbSrc = encodeURIComponent(l.image);
+        imageHtml = '<div class="card-image-wrap" data-lb="' + safeLbSrc + '"><img src="' + safeImgSrc + '" alt="' + escHtml(l.title) + '" loading="lazy"></div>';
   }
   const adminActions = adminMode ? '<div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();"><button class="btn btn-ghost btn-sm admin-edit" data-id="' + l.id + '">✏️</button><button class="btn btn-danger btn-sm admin-delete" data-id="' + l.id + '">🗑️</button></div>' : '';
 
@@ -1836,7 +1837,7 @@ function openDetail(id) {
   tagsEl.innerHTML = tags.length > 0 ? tags.map(t => '<span class="mini-tag">' + t + '</span>').join('') : '';
 
   document.getElementById('detailClicks').textContent = getClicks(l.id);
-  const publishDate = new Date(l.date); const now = new Date();
+  const publishDate = new Date(l.date + 'T00:00:00'); const now = new Date();
   document.getElementById('detailDays').textContent = Math.max(0, Math.ceil((now - publishDate) / 86400000));
 
   if (l.attachment && l.attachmentName) {
@@ -1932,7 +1933,7 @@ async function saveLink(e) {
     addChangelog('edit', '编辑了链接: ' + data.title);
     sendDingTalk('edit', data);
   } else {
-    data.id = Date.now() + Math.random();
+    data.id = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     links.unshift(data);
     showToast('✅ 链接已添加', 'success');
     addChangelog('add', '新增了链接: ' + data.title);
