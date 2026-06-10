@@ -1730,6 +1730,11 @@ function renderLinks() {
 }
 
 function bindAdminEvents() {
+  // Bind image error handlers
+  document.querySelectorAll('.card-image-wrap img').forEach(img => {
+    img.addEventListener('error', function() { this.parentElement.style.display = 'none'; });
+    img.parentElement.addEventListener('click', function() { openLightbox(this.querySelector('img')?.src || ''); });
+  });
   if (!adminMode) return;
   document.querySelectorAll('.admin-edit').forEach(el => { el.addEventListener('click', () => openEditModal(el.dataset.id)); });
   document.querySelectorAll('.admin-delete').forEach(el => { el.addEventListener('click', () => deleteLink(el.dataset.id)); });
@@ -1768,7 +1773,7 @@ function buildCard(l) {
   const clicks = getClicks(l.id);
   let imageHtml = '';
   if (l.image) {
-    imageHtml = '<div class="card-image-wrap" onclick="openLightbox(\'' + l.image.replace(/'/g, "\\'") + '\')"><img src="' + l.image + '" alt="' + l.title + '" loading="lazy" onerror=\"this.parentElement.style.display='none'\"></div>';
+        imageHtml = '<div class="card-image-wrap" onclick="openLightbox(\'' + l.image.replace(/'/g, "\\\'") + '\')"><img src="' + l.image + '" alt="' + l.title + '" loading="lazy"></div>';
   }
   const adminActions = adminMode ? '<div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();"><button class="btn btn-ghost btn-sm admin-edit" data-id="' + l.id + '">✏️</button><button class="btn btn-danger btn-sm admin-delete" data-id="' + l.id + '">🗑️</button></div>' : '';
 
