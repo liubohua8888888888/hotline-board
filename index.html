@@ -1199,7 +1199,7 @@ async function getGitHubFileSHA(token) {
 }
 async function syncToCloud() {
   if (!cloudConfig || !cloudConfig.token) return;
-  const syncData = { links: links, announcements: announcements, clickCounts: clickCounts };
+  const syncData = { links: links, announcements: announcements, clickCounts: clickCounts, changelog: loadChangelog() };
   const token = cloudConfig.token;
   const content = btoa(unescape(encodeURIComponent(JSON.stringify(syncData, null, 2))));
   const sha = await getGitHubFileSHA(token);
@@ -1230,6 +1230,18 @@ async function loadFromCloud() {
     if (remote.links) links = remote.links;
     if (remote.announcements) announcements = remote.announcements;
     if (remote.clickCounts) { for (const k in remote.clickCounts) { clickCounts[k] = Math.max(clickCounts[k] || 0, remote.clickCounts[k]); } saveClicks(); }
+    if (remote.changelog) {
+      const localLog = loadChangelog();
+      const merged = [...localLog];
+      const seen = new Set(localLog.map(e => e.time + '|' + e.action + '|' + e.text));
+      for (const entry of remote.changelog) {
+        const key = entry.time + '|' + entry.action + '|' + entry.text;
+        if (!seen.has(key)) { merged.push(entry); seen.add(key); }
+      }
+      merged.sort((a, b) => b.time.localeCompare(a.time));
+      if (merged.length > 200) merged.length = 200;
+      saveChangelog(merged);
+    }
     saveData(); saveAnnouncements(); saveClicks();
     renderLinks();
     showToast('☁️ 已从 GitHub 加载数据', 'success');
