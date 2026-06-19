@@ -8,6 +8,11 @@
   },
   "changelog": [
     {
+      "time": "2026-06-19 10:27:22",
+      "action": "sync",
+      "text": "数据已同步到 GitHub"
+    },
+    {
       "time": "2026-06-19 10:26:32",
       "action": "login",
       "text": "管理员登录验证成功"
