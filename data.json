@@ -1,5 +1,23 @@
 {
-  "links": [],
+  "links": [
+    {
+      "title": "客服业务流程",
+      "url": "https://page.weixin.qq.com/smartpage/p/b1_AWEAcgYhAH00f0nvNVqSN2Ip8VA?_cef_session_id_=OPe9fcMHc8R&clickStart=1781834428304&p=1jigjo&open_source=wecomgroup&loadStart=1781834428362",
+      "description": "客服业务流程",
+      "type": "日报",
+      "department": "客户体验中心",
+      "tags": [
+        "重要"
+      ],
+      "date": "2026-06-19",
+      "isToday": true,
+      "image": "",
+      "attachment": false,
+      "attachmentName": "",
+      "visibility": "supervisor",
+      "id": "1781836154013_nm06pwlsk"
+    }
+  ],
   "announcements": [],
   "clickCounts": {
     "1780818341679.8645": 1,
@@ -7,6 +25,16 @@
     "1780984274433.828": 1
   },
   "changelog": [
+    {
+      "time": "2026-06-19 10:29:14",
+      "action": "add",
+      "text": "新增了链接: 客服业务流程"
+    },
+    {
+      "time": "2026-06-19 10:28:30",
+      "action": "sync",
+      "text": "数据已同步到 GitHub"
+    },
     {
       "time": "2026-06-19 10:28:16",
       "action": "export",
