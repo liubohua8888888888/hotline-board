@@ -8,6 +8,21 @@
   },
   "changelog": [
     {
+      "time": "2026-06-19 10:27:39",
+      "action": "config",
+      "text": "更新了钉钉通知配置"
+    },
+    {
+      "time": "2026-06-19 10:27:30",
+      "action": "login",
+      "text": "管理员自动登录（session恢复）"
+    },
+    {
+      "time": "2026-06-19 10:27:27",
+      "action": "sync",
+      "text": "数据已同步到 GitHub"
+    },
+    {
       "time": "2026-06-19 10:27:22",
       "action": "sync",
       "text": "数据已同步到 GitHub"
