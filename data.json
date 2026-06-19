@@ -8,6 +8,21 @@
   },
   "changelog": [
     {
+      "time": "2026-06-19 10:28:16",
+      "action": "export",
+      "text": "导出了卡片列表CSV（共0条）"
+    },
+    {
+      "time": "2026-06-19 10:27:56",
+      "action": "login",
+      "text": "主管模式已开启"
+    },
+    {
+      "time": "2026-06-19 10:27:46",
+      "action": "sync",
+      "text": "数据已同步到 GitHub"
+    },
+    {
       "time": "2026-06-19 10:27:39",
       "action": "config",
       "text": "更新了钉钉通知配置"
